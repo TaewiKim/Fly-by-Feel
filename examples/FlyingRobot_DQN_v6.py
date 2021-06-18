@@ -191,8 +191,8 @@ class serialPlot:
 class DQN(tf.keras.Model):
     def __init__(self, action_size):
         super(DQN, self).__init__()
-        self.fc1 = Conv2D(filters=32, kernel_size=(4, 2), input_shape=(-1, 2, 1))
-        self.fc2 = Conv2D(filters=64, kernel_size=(4, 1))
+        self.fc1 = Conv2D(filters=32, kernel_size=(1, 2), input_shape=(-1, 2, 1))
+        self.fc2 = Conv2D(filters=64, kernel_size=(1, 1))
         self.fc3 = Flatten()
         self.fc4 = Dense(128, activation='relu')
         self.fc_out = Dense(action_size, activation='softmax',
@@ -385,7 +385,7 @@ def main():
     # plt.show()
     # my_thread.join()
 
-    state_size = 1
+    state_size = 2
     action_size = 3
     agent = DQNAgent(state_size, action_size)
 
@@ -399,17 +399,17 @@ def main():
     #     agent.step(my_thread, s, 2)
     #     time.sleep(1)
 
-    while True:
-        # agent.step(my_thread, s, 1)
-        # print(s.getSerialData())
-        # print(my_thread.channel_data)
-        time.sleep(0.01)
-        agent.step(my_thread, s, 0)
-        print(s.getSerialData())
-        print(my_thread.channel_data)
-        time.sleep(0.1)
+    # while True:
+    #     # agent.step(my_thread, s, 1)
+    #     # print(s.getSerialData())
+    #     # print(my_thread.channel_data)
+    #     time.sleep(0.01)
+    #     agent.step(my_thread, s, 0)
+    #     print(s.getSerialData())
+    #     print(my_thread.channel_data)
+    #     time.sleep(0.1)
 
-'''
+
     num_episode = 2000
 
     for e in range(num_episode):
@@ -420,17 +420,18 @@ def main():
         score_avg = 0
         count = 0
         monitoring = []
-        thread = Thread(target=s.getSerialData)
-        thread.start()
-        state = s.data
+        # thread = Thread(target=s.getSerialData)
+        # thread.start()
+        state = np.array([my_thread.channel_data, my_thread.channel_data])
         state = np.reshape(state, [1, -1, state_size, 1])
 
         while not done:
             # 현재 상태로 행동을 선택
             action = agent.get_action(state)
             # 선택한 행동으로 환경에서 한 타임스텝 진행
-            next_state, reward, done = agent.step(s, action)
-            monitoring.append(next_state)
+            next_state_part, reward, done = agent.step(my_thread, s, action)
+            next_state = np.array([next_state_part, next_state_part])
+            # monitoring.append(next_state)
             next_state = np.reshape(next_state, [1, -1, state_size, 1])
 
             # 타임스텝마다 보상 0.1, 에피소드가 중간에 끝나면 -100 보상
@@ -465,13 +466,13 @@ def main():
                                                                                                               agent.memory),
                                                                                                           agent.epsilon, count))
 
-                # 에피소드마다 학습 결과 그래프로 저장
-                scores.append(score_avg)
-                episodes.append(e)
-                pylab.plot(episodes, scores, 'b')
-                pylab.xlabel("episodes")
-                pylab.ylabel("average score")
-                pylab.savefig("./data/graph.png")
+                # # 에피소드마다 학습 결과 그래프로 저장
+                # scores.append(score_avg)
+                # episodes.append(e)
+                # pylab.plot(episodes, scores, 'b')
+                # pylab.xlabel("episodes")
+                # pylab.ylabel("average score")
+                # pylab.savefig("./data/graph.png")
 
                 # 이동 평균이 400 이상 때 종료
                 if score_avg > 50000:
@@ -479,7 +480,6 @@ def main():
                     sys.exit()
             s.isRun = False
     s.close()
-'''
 
 if __name__ == "__main__":
     main()
