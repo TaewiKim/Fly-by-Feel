@@ -33,7 +33,7 @@ class Qnet(nn.Module):
             return out.argmax().item()
 
     def train_net(self, q_target, memory, batch_size):
-        for i in range(10):
+        for i in range(100):
             s, a, r, s_prime, done_mask = memory.sample(batch_size)
 
             q_out = self.forward(s)
