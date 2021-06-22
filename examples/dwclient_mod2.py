@@ -172,8 +172,8 @@ class DewePlot:
 
 while True:
     state = np.array([my_thread.channel_data,my_thread.channel_data])
-    state = np.reshape(state, [1, -1, 2, 1])
-    print(state)
+    # state = np.reshape(state, [1, -1, 2, 1])
+    # print(state)
 
     time.sleep(0.01)
 

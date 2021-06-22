@@ -330,7 +330,6 @@ class DQNAgent():
         self.memory.append((state, action, reward, next_state, done))
 
 
-
 def main():
     # Teensy Transaction
     portName = 'COM3'
