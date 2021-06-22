@@ -6,12 +6,11 @@ import struct
 import copy
 
 class serialPlot:
-    def __init__(self, serialPort, serialBaud, plotLength, dataNumBytes, numPlots):
+    def __init__(self, serialPort, serialBaud, dataNumBytes):
+        numPlots=1
         self.port = serialPort
         self.baud = serialBaud
-        self.plotMaxLength = plotLength
         self.dataNumBytes = dataNumBytes
-        self.numPlots = numPlots
         self.rawData = bytearray(numPlots * dataNumBytes)
         self.dataType = None
         if dataNumBytes == 2:

@@ -1,133 +1,19 @@
 import random
 import numpy as np
-from utils.dwserver import *
 from utils.dwclient import *
 from utils.serialChannel import *
-
-import collections
-import random
-
+from environment import Environment
+from model import Qnet
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
+from replayBuffer import ReplayBuffer
 
-DATA_TYPES = ['b', 'B', 'h', 'H', 'i', 'f', 'q', 'd']
-DATA_SIZE = [1, 1, 2, 2, 4, 4, 8, 8]
-
-
-class ReplayBuffer():
-    def __init__(self):
-        self.buffer = collections.deque(maxlen=buffer_limit)
-
-    def put(self, transition):
-        self.buffer.append(transition)
-
-    def sample(self, n):
-        mini_batch = random.sample(self.buffer, n)
-        s_lst, a_lst, r_lst, s_prime_lst, done_mask_lst = [], [], [], [], []
-
-        for transition in mini_batch:
-            s, a, r, s_prime, done_mask = transition
-            s_lst.append(s)
-            a_lst.append([a])
-            r_lst.append([r])
-            s_prime_lst.append(s_prime)
-            done_mask_lst.append([done_mask])
-
-        return torch.tensor(s_lst, dtype=torch.float), torch.tensor(a_lst), \
-               torch.tensor(r_lst), torch.tensor(s_prime_lst, dtype=torch.float), \
-               torch.tensor(done_mask_lst)
-
-    def size(self):
-        return len(self.buffer)
-
-
-class Qnet(nn.Module):
-    def __init__(self):
-        super(Qnet, self).__init__()
-        self.fc1 = nn.Linear(1, 128)
-        self.fc2 = nn.Linear(128, 128)
-        self.fc3 = nn.Linear(128, 3)
-
-    def forward(self, x):
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x
-
-    def sample_action(self, obs, epsilon):
-        out = self.forward(obs)
-        coin = random.random()
-        if coin < epsilon:
-            return random.randint(0, 2)
-        else:
-            return out.argmax().item()
-
-
-class Environment():
-    def __init__(self, dw_thread, serialChannel):
-        self.dw_thread = dw_thread
-        self.serial_channel = serialChannel
-
-    def reset(self):
-        PWM = 0
-        MtrSpd = 'S' + str(PWM) + '%'  # '%' is our ending marker
-        self.serial_channel.serialConnection.write(MtrSpd.encode())
-
-        return np.array(self.dw_thread.channel_data)
-
-    def step(self, action):
-        if action == 0:
-            PWM = 0
-            MtrSpd = 'S' + str(PWM) + '%'  # '%' is our ending marker
-            self.serial_channel.serialConnection.write(MtrSpd.encode())
-            # stay
-
-        elif action == 1:
-            PWM = 150
-            MtrSpd = 'S' + str(PWM) + '%'  # '%' is our ending marker
-            self.serial_channel.serialConnection.write(MtrSpd.encode())
-            # go slow
-
-        elif action == 2:
-            PWM = 300
-            MtrSpd = 'S' + str(PWM) + '%'  # '%' is our ending marker
-            self.serial_channel.serialConnection.write(MtrSpd.encode())
-            # go fast
-
-        angle = self.serial_channel.getSerialData()
-        next_state = np.array(self.dw_thread.channel_data)
-        print("state", next_state)
-
-        reward = 0
-        done = False
-
-        if angle > 0:
-            reward = angle
-        if angle < -10:
-            self.warning += 1
-            done = False
-            if self.warning >= 500:
-                done = True
-                PWM = 0
-                MtrSpd = 'S' + str(PWM) + '%'  # '%' is our ending marker
-                self.serial_channel.serialConnection.write(MtrSpd.encode())
-                reward = -3000
-                print('low angle')
-
-        return next_state, reward, done
 
 def main():
-    # Teensy Transaction
     portName = 'COM3'
     baudRate = 19200
-    maxPlotLength = 100  # number of points in x-axis of real time plot
     dataNumBytes = 4  # number of bytes of 1 data point
-    numPlots = 1  # number of plots in 1 graph
-    s = serialPlot(portName, baudRate, maxPlotLength, dataNumBytes,
-                   numPlots)  # initializes all required variables
-    s.readSerialStart()  # starts background thread
+    s_channel = serialPlot(portName, baudRate, dataNumBytes)
+    s_channel.readSerialStart()  # starts background thread
 
     my_thread, tn, ready = get_dewe_thread()
     my_thread.start()
@@ -136,40 +22,61 @@ def main():
     ready.wait()
     tn.write(b"STARTACQ\r\n")
 
-    env = Environment(my_thread, s)
+    buffer_limit = 3000
+    gamma = 0.98
+    learning_rate = 0.0001
+    print_interval = 20
+    batch_size = 32
 
-    agent = Qnet()
+    env = Environment(my_thread, s_channel)
+    q = Qnet(learning_rate, gamma)
+    q_target = Qnet(learning_rate, gamma)
+    q_target.load_state_dict(q.state_dict())
+    memory = ReplayBuffer(buffer_limit)
 
-    # state_size = 2
-    # action_size = 3
-    # agent = DQNAgent(state_size, action_size)
+    time.sleep(2) # for waiting dw thread to be ready
+    s = env.reset()
 
-    scores, episodes = [], []
-    leftWing, rightWing = [], []
-    time.sleep(1)
+    # for i in range(100):
+    #     state_tensor = torch.from_numpy(state).float().unsqueeze(0)
+    #     print(state_tensor.size())
+    #     action = agent.sample_action(state_tensor, 0.5)
+    #     print(action)
+    #     next_state, reward, done = env.step(action)
+    #     time.sleep(1)
+    #     next_state, reward, done = env.step(0)
+    #     time.sleep(1)
+    #     state = next_state
 
-    state = env.reset()
+    score = 0.0
 
-    for i in range(100):
-        state_tensor = torch.from_numpy(state).float().unsqueeze(0)
-        print(state_tensor.size())
-        action = agent.sample_action(state_tensor, 0.5)
-        print(action)
-        next_state, reward, done = env.step(action)
-        time.sleep(1)
-        next_state, reward, done = env.step(0)
-        time.sleep(1)
-        state = next_state
+    for n_epi in range(10000):
+        epsilon = max(0.01, 0.08 - 0.01 * (n_epi / 200))  # Linear annealing from 8% to 1%
+        s = env.reset()
+        done = False
 
-    # while True:
-    #     # agent.step(my_thread, s, 1)
-    #     # print(s.getSerialData())
-    #     # print(my_thread.channel_data)
-    #     time.sleep(0.01)
-    #     agent.step(my_thread, s, 0)
-    #     print(s.getSerialData())
-    #     print(my_thread.channel_data)
-    #     time.sleep(0.1)
+        while not done:
+            a = q.sample_action(torch.from_numpy(s).float(), epsilon)
+            s_prime, r, done = env.step(a)
+            done_mask = 0.0 if done else 1.0
+            memory.put((s, a, r / 100.0, s_prime, done_mask))
+            s = s_prime
+
+            score += r
+            if done:
+                break
+
+        if memory.size() > 2000:
+            q.train_net(q_target, memory, batch_size)
+
+        if n_epi % print_interval == 0 and n_epi != 0:
+            q_target.load_state_dict(q.state_dict())
+            print("n_episode :{}, score : {:.1f}, n_buffer : {}, eps : {:.1f}%".format(
+                n_epi, score / print_interval, memory.size(), epsilon * 100))
+            score = 0.0
+    env.close()
+
+
 
 
     # num_episode = 2000
