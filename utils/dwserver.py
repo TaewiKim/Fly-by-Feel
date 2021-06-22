@@ -139,6 +139,7 @@ class MyThread(threading.Thread):
                 self.buffer_data = self.buffer_data[current_package.end_index + 8:]
                 for i in range(0, len(self.list_of_used_ch)):
                     if self.list_of_used_ch[i].async_ch:
+                        print('async')
                         channel_data, timestamp = current_package.read_data_as_async(self.list_of_used_ch[i].data_type,
                                                                                      self.list_of_used_ch[
                                                                                          i].data_type_size)
@@ -174,5 +175,12 @@ class MyThread(threading.Thread):
                                                                               i].number_of_added_samples + len(
                             channel_data)
                         # print(len(channel_data), time.time() - self.time, channel_data)
-                        self.channel_data = np.array(channel_data).mean()
+                        self.channel_data = np.array(channel_data[-32:])
+                        # print(channel_data)
+                        # if len(channel_data) > 32:
+                        #     self.channel_data = np.array(channel_data[-32:])
+                        # elif len(channel_data) == 32:
+                        #     self.channel_data = np.array(channel_data)
+                        # else:
+                        #     raise "error sese"
         s.close()
