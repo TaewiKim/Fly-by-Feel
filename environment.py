@@ -13,7 +13,7 @@ class Environment:
         self.step_count = 0
         self.warning_count = 0
         self.stop_drone()
-        return np.array([self.dw_thread.channel_data]) / 17512291.0
+        return np.array([self.dw_thread.channel_data])
 
     def step(self, action):
         self.step_count += 1
@@ -33,7 +33,7 @@ class Environment:
         if done:
             self.stop_drone()
 
-        return next_state/ 17512291.0, reward, done
+        return next_state, reward, done
 
     def calc_reward_done(self):
         reward = 0

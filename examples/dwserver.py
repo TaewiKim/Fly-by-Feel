@@ -102,6 +102,7 @@ class MyThread(threading.Thread):
         self.ready = ready
         self.list_of_used_ch = list_of_used_ch
         self.buffer_data = b''
+        self.time = time.time()
 
     def run(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -137,6 +138,7 @@ class MyThread(threading.Thread):
                 for i in range(0, len(self.list_of_used_ch)):
                     if self.list_of_used_ch[i].async_ch:
                         channel_data, timestamp = current_package.read_data_as_async(self.list_of_used_ch[i].data_type, self.list_of_used_ch[i].data_type_size)
+                        print("hihi", channel_data)
                         if len(channel_data) > 0:
                             self.list_of_used_ch[i].channel_data = (self.list_of_used_ch[i].channel_data  + channel_data)[-MAX_ASYNC_SAMPLES:]
                             self.list_of_used_ch[i].timestamp = (self.list_of_used_ch[i].timestamp + timestamp)[-MAX_ASYNC_SAMPLES:]
@@ -155,4 +157,5 @@ class MyThread(threading.Thread):
                                                                                                                 num=len(channel_data))))[-MAX_SYNC_SAMPLES:]
 
                         self.list_of_used_ch[i].number_of_added_samples = self.list_of_used_ch[i].number_of_added_samples + len(channel_data)
+                        # print(len(channel_data), time.time()-self.time, channel_data)
         s.close()

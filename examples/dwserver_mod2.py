@@ -156,9 +156,9 @@ class MyThread(threading.Thread):
 
                         self.list_of_used_ch[i].number_of_added_samples = self.list_of_used_ch[i].number_of_added_samples + len(self.channel_data)
                         # self.channel_data = np.array(self.channel_data)
-
+                        self.channel_data = (np.array(self.channel_data) - 17820000)/750000
                         print(self.channel_data)
-                        self.channel_data = np.array(self.channel_data).mean()
+                        # self.channel_data = np.array(self.channel_data).mean()
 
 
             # print('ch_data_updated')

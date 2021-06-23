@@ -42,7 +42,7 @@ def main(config):
 
             if step % 10 == 0:
                 print(step, score, a)
-            a = 0
+            # a = 0
             s_prime, r, done = env.step(a)
             done_mask = 0.0 if done else 1.0
             memory.put((s, a, r, s_prime, done_mask))
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         "print_interval" : 5,
         "target_update_interval": 2,
         "batch_size" : 64,
-        "init_eps" : 0.0,
+        "init_eps" : 1.0,
         "fin_eps" : 0.0,
         "train_start_buffer_size" : 2000
     }

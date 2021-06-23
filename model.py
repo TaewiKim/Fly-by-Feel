@@ -35,11 +35,10 @@ class Qnet(nn.Module):
     def train_net(self, q_target, memory, batch_size):
         for i in range(100):
             s, a, r, s_prime, done_mask = memory.sample(batch_size)
-
             q_out = self.forward(s)
-            q_a = q_out.gather(1, a)
-            max_q_prime = q_target(s_prime).max(1)[0].unsqueeze(1)
-            target = r + self.gamma * max_q_prime * done_mask
+            q_a = q_out.gather(2, a.unsqueeze(1))
+            max_q_prime = q_target(s_prime).max(2)[0].unsqueeze(1)
+            target = r.unsqueeze(1) + self.gamma * max_q_prime * done_mask.unsqueeze(1)
             loss = F.smooth_l1_loss(q_a, target)
 
             self.optimizer.zero_grad()

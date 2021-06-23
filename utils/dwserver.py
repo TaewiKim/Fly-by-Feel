@@ -175,8 +175,9 @@ class MyThread(threading.Thread):
                                                                               i].number_of_added_samples + len(
                             channel_data)
                         # print(len(channel_data), time.time() - self.time, channel_data)
-                        self.channel_data = (np.array(channel_data[-32:])-17820000)/750000
-                        # print(channel_data)
+                        self.channel_data = (np.array(channel_data[-32:]) - 17820000) / 750000
+                        # self.channel_data = np.array(channel_data[-32:])
+                        # print(self.channel_data)
                         # if len(channel_data) > 32:
                         #     self.channel_data = np.array(channel_data[-32:])
                         # elif len(channel_data) == 32:
