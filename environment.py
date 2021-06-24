@@ -49,7 +49,7 @@ class Environment:
             done = True
             reward = -10
 
-        if self.step_count >= 3000:
+        if self.step_count >= 320:
             done = True
 
         return reward, done
