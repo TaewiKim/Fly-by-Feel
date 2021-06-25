@@ -30,7 +30,7 @@ def main(config):
 
     score = 0.0
 
-    for n_epi in range(10000):
+    for n_epi in range(200):
         epsilon = max(config["fin_eps"], config["init_eps"] - 0.01 * (n_epi))  # Linear annealing from 8% to 1%
         s = env.reset()
         done = False
@@ -55,8 +55,8 @@ def main(config):
 
             t2 = time.time()-t1
 
-            if t2<0.025:
-                time.sleep(0.025-t2)
+            if t2 < config["decision_period"]:
+                time.sleep(config["decision_period"]-t2)
 
         if memory.size() > config["train_start_buffer_size"]:
             q.train_net(q_target, memory, config["batch_size"])
@@ -81,6 +81,7 @@ if __name__ == "__main__":
         "batch_size" : 64,
         "init_eps" : 1.0,
         "fin_eps" : 0.0,
-        "train_start_buffer_size" : 2000
+        "train_start_buffer_size" : 2000,
+        "decision_period" : 0.05,
     }
     main(config)

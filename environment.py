@@ -22,10 +22,10 @@ class Environment:
             self.stop_drone()
 
         elif action == 1:  # medium force
-            self.serial_channel.serialConnection.write("S150%".encode())
+            self.serial_channel.serialConnection.write("S30%".encode())
 
         elif action == 2:  # strong force
-            self.serial_channel.serialConnection.write("S300%".encode())
+            self.serial_channel.serialConnection.write("S70%".encode())
 
         next_state = np.array([copy.deepcopy(self.dw_thread.channel_data)])
         reward, done = self.calc_reward_done()
@@ -41,7 +41,7 @@ class Environment:
         angle = self.serial_channel.getSerialData()
 
         if angle > 0:
-            reward = angle/(90.0*100)
+            reward = angle/(50.0*100)
         if angle < -10:
             self.warning_count += 1
 
