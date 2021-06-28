@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
 import time
+from collections import deque
 
 HOST = ''  # Symbolic name meaning all available interfaces
 PORT = 8001  # Dewesoft port for data stream
@@ -105,6 +106,8 @@ class MyThread(threading.Thread):
         self.list_of_used_ch = list_of_used_ch
         self.buffer_data = b''
         self.time = time.time()
+        self.state = deque(maxlen=200)
+        self.state_array = []
 
     def run(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -177,6 +180,9 @@ class MyThread(threading.Thread):
                         # print(len(channel_data), time.time() - self.time, channel_data)
                         self.channel_data = ((np.array(channel_data[-32:]) * 10 ** 38) - 5.525) / 0.15
                         self.channel_data = self.channel_data.astype(np.float32)
+                        self.state.extend(self.channel_data)
+                        self.state_array = np.array(self.state)
+
                         # self.channel_data = (np.array(channel_data[-32:]) - 17820000) / 750000
                         # self.channel_data = (np.array(channel_data[-32:])
                         # print(self.channel_data)

@@ -9,7 +9,7 @@ import random
 class Qnet(nn.Module):
     def __init__(self, learning_rate, gamma):
         super(Qnet, self).__init__()
-        self.fc1 = nn.Linear(32, 256)
+        self.fc1 = nn.Linear(200, 256)
         self.fc2 = nn.Linear(256, 256)
         self.fc3 = nn.Linear(256, 256)
         self.fc4 = nn.Linear(256, 3)

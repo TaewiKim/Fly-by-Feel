@@ -5,7 +5,7 @@ from model import Qnet
 import torch
 from replayBuffer import ReplayBuffer
 import time, datetime
-
+import pylab
 
 
 def main(config):
@@ -29,8 +29,10 @@ def main(config):
     time.sleep(2) # for waiting dw thread to be ready
 
     score = 0.0
+    scores = []
+    episodes = []
 
-    for n_epi in range(200):
+    for n_epi in range(500):
         epsilon = max(config["fin_eps"], config["init_eps"] - 0.01 * (n_epi))  # Linear annealing from 8% to 1%
         s = env.reset()
         done = False
@@ -68,6 +70,15 @@ def main(config):
 
         if n_epi % config["target_update_interval"] == 0 and n_epi != 0:
             q_target.load_state_dict(q.state_dict())
+
+        # 에피소드마다 학습 결과 그래프로 저장
+        scores.append(score)
+        episodes.append(n_epi)
+        pylab.plot(episodes, scores, 'b')
+        pylab.xlabel("episodes")
+        pylab.ylabel("score")
+        pylab.savefig("./save_graph/flppingdrone_graph.png")
+        torch.save(q.state_dict(), "./save_graph/flappingdrone_model.py")
 
     env.close()
 

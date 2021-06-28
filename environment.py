@@ -13,7 +13,7 @@ class Environment:
         self.step_count = 0
         self.warning_count = 0
         self.stop_drone()
-        return np.array([self.dw_thread.channel_data])
+        return np.array([self.dw_thread.state_array])
 
     def step(self, action):
         self.step_count += 1
@@ -27,7 +27,7 @@ class Environment:
         elif action == 2:  # strong force
             self.serial_channel.serialConnection.write("S70%".encode())
 
-        next_state = np.array([copy.deepcopy(self.dw_thread.channel_data)])
+        next_state = np.array([copy.deepcopy(self.dw_thread.state_array)])
         reward, done = self.calc_reward_done()
 
         if done:
