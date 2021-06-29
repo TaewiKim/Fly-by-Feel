@@ -47,10 +47,10 @@ class Environment:
             self.stop_drone()
 
         elif action == 1:  # medium force
-            self.serial_channel.serialConnection.write("S50%".encode())
-
-        elif action == 2:  # strong force
             self.serial_channel.serialConnection.write("S80%".encode())
+
+        # elif action == 2:  # strong force
+        #     self.serial_channel.serialConnection.write("S80%".encode())
 
         self.action_count[action] += 1
 

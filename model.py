@@ -64,7 +64,7 @@ class QnetConv(nn.Module):
         self.pool2 = nn.MaxPool1d(2)
 
         self.fc1 = nn.Linear(22*32, 256)
-        self.fc2 = nn.Linear(256, 3)
+        self.fc2 = nn.Linear(256, 2)
 
         self.gamma = gamma
         self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
@@ -84,7 +84,7 @@ class QnetConv(nn.Module):
         out = self.forward(obs)
         coin = random.random()
         if coin < epsilon:
-            return random.randint(0, 2)
+            return random.randint(0, 1)
         else:
             return out.argmax().item()
 

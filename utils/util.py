@@ -32,4 +32,4 @@ def write_summary(writer, n_epi, score, optimization_step, avg_loss, epsilon, en
     writer.add_scalar('state/max_val', env.max_s, n_epi)
     writer.add_scalar('state/min_val', env.min_s, n_epi)
     writer.add_scalar('action/ratio_no_op', env.action_count[0] / float(np.sum(env.action_count)), n_epi)
-    writer.add_scalar('action/ratio_max_op', env.action_count[2] / float(np.sum(env.action_count)), n_epi)
+    writer.add_scalar('action/ratio_max_op', env.action_count[1] / float(np.sum(env.action_count)), n_epi)
