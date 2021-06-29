@@ -60,7 +60,7 @@ class Environment:
         angle = self.serial_channel.getSerialData()
 
         if angle > 0:
-            reward = angle/(50.0*100)
+            reward = angle/(20.0*100)
         if angle < -10:
             self.warning_count += 1
 
