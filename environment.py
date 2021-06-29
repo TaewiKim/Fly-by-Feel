@@ -16,16 +16,25 @@ class Environment:
         self.state = deque(maxlen=100)
 
     def reset(self):
+        self.stop_drone()
+
         self.step_count = 0
         self.warning_count = 0
-        self.stop_drone()
         self.action_count = np.array([0, 0, 0])
         self.angle_sum = 0
         self.state.extend(np.zeros(100))
+
+
+    def get_current_state(self):
         input_state = copy.deepcopy(self.dw_thread.channel_data)
         self.state.extend(input_state)
+        reward, done, angle = self.calc_reward_done()
+        self.angle_sum += angle
+        if done:
+            self.stop_drone()
 
-        return np.array([self.state])
+        return np.array([self.state]), reward, done
+
 
     def step(self, action):
         self.step_count += 1
@@ -37,20 +46,9 @@ class Environment:
             self.serial_channel.serialConnection.write("S50%".encode())
 
         elif action == 2:  # strong force
-            self.serial_channel.serialConnection.write("S70%".encode())
-
-        input_state = copy.deepcopy(self.dw_thread.channel_data)
-        self.state.extend(input_state)
-        next_state = np.array([self.state])
-        reward, done, angle = self.calc_reward_done()
+            self.serial_channel.serialConnection.write("S80%".encode())
 
         self.action_count[action] += 1
-        self.angle_sum += angle
-
-        if done:
-            self.stop_drone()
-
-        return next_state, reward, done
 
     def calc_reward_done(self):
         reward = 0

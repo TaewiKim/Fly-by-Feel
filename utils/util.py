@@ -20,12 +20,14 @@ def save_model(config, model):
     path = config["log_dir"] + f"/model_{model.optimization_step}.tar"
     torch.save(model_dict, path)
 
-def write_summary(writer, n_epi, score, optimization_step, avg_loss, epsilon, env:Environment):
+def write_summary(writer, n_epi, score, optimization_step, avg_loss, epsilon, env:Environment, avg_loop_t, train_t):
     writer.add_scalar('agent/score', score, n_epi)
     writer.add_scalar('agent/eps', epsilon, n_epi)
     writer.add_scalar('agent/avg_angle', env.angle_sum/float(env.step_count), n_epi)
     writer.add_scalar('agent/len_epi', env.step_count, n_epi)
-    writer.add_scalar('agent/power_0', env.action_count[0]/float(np.sum(env.action_count)), n_epi)
-    writer.add_scalar('agent/power_max', env.action_count[2] / float(np.sum(env.action_count)), n_epi)
+    writer.add_scalar('agent/ratio_no_op', env.action_count[0]/float(np.sum(env.action_count)), n_epi)
+    writer.add_scalar('agent/ratio_max_op', env.action_count[2] / float(np.sum(env.action_count)), n_epi)
     writer.add_scalar('train/step', optimization_step, n_epi)
     writer.add_scalar('train/loss', avg_loss, n_epi)
+    writer.add_scalar('time/loop', avg_loop_t, n_epi)
+    writer.add_scalar('time/train', train_t, n_epi)

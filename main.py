@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from utils.util import save_config, save_model, write_summary
 
 
+
 def main(config):
     save_config(config)
 
@@ -40,21 +41,23 @@ def main(config):
 
     for n_epi in range(5000):
         epsilon = max(config["fin_eps"], config["init_eps"] - 0.01 * (n_epi))  # Linear annealing from 8% to 1%
-        s = env.reset()
+        env.reset()
         done = False
         step = 0
+        loop_t = 0.0
+        prev_s, prev_a = None, None
 
         while not done:
             t1 = time.time()
-            a = q.sample_action(torch.from_numpy(s).float(), epsilon)
+            s, r, done = env.get_current_state()
+            a = q.sample_action(torch.from_numpy(s).float().unsqueeze(1), epsilon)
+            # a = 0
+            env.step(a)
 
-            # if step % 10 == 0:
-            #     print(step, score, a)
-            a = 0
-            s_prime, r, done = env.step(a)
             done_mask = 0.0 if done else 1.0
-            memory.put((s, a, r, s_prime, done_mask))
-            s = s_prime
+            if prev_s is not None:
+                memory.put((prev_s, prev_a, r, s, done_mask))
+            prev_s, prev_a = s, a
 
             step += 1
             score += r
@@ -62,17 +65,22 @@ def main(config):
                 break
 
             t2 = time.time()-t1
+            loop_t += t2
 
             if t2 < config["decision_period"]:
                 time.sleep(config["decision_period"]-t2)
 
-        if memory.size() > config["train_start_buffer_size"]:
-            avg_loss = q.train_net(q_target, memory, config["batch_size"])
+            # if step % 10 == 0:
+            #     print(step, score, a)
 
-        if n_epi % config["print_interval"] == 0 and n_epi != 0:
+        train_t = 0.0
+        if memory.size() > config["train_start_buffer_size"]:
+            avg_loss, train_t = q.train_net(q_target, memory, config["batch_size"])
+
+        if n_epi != 0:
             print("n_episode :{}, score : {:.1f}, n_buffer : {}, eps : {:.1f}%".format(
-                n_epi, score / config["print_interval"], memory.size(), epsilon * 100))
-            write_summary(writer, n_epi, score, q.optimization_step, avg_loss, epsilon, env)
+                n_epi, score, memory.size(), epsilon * 100))
+            write_summary(writer, n_epi, score, q.optimization_step, avg_loss, epsilon, env, loop_t/float(step), train_t)
 
         if n_epi % config["target_update_interval"] == 0 and n_epi != 0:
             q_target.load_state_dict(q.state_dict())
@@ -89,14 +97,14 @@ if __name__ == "__main__":
         "gamma" : 0.98,
         "learning_rate" : 0.0001,
         "print_interval" : 1,
-        "target_update_interval": 2,
+        "target_update_interval": 3,
         "batch_size" : 64,
         "init_eps" : 0.5,
         "fin_eps" : 0.01,
         "train_start_buffer_size" : 1000,
         "decision_period" : 0.05,
-        "model_save_interval" : 5,
-        "max_episode_len" : 100,
+        "model_save_interval" : 10,
+        "max_episode_len" : 200, # 0.05*200 = 10 sec
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
     }
     main(config)
