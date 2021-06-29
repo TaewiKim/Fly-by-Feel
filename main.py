@@ -4,11 +4,16 @@ from environment import Environment, DummyEnv
 from model import Qnet
 import torch
 from replayBuffer import ReplayBuffer
-import time, datetime
+import time, os
 import pylab
+from tensorboardX import SummaryWriter
+from datetime import datetime, timedelta
+from utils.util import save_config, save_model, write_summary
 
 
 def main(config):
+    save_config(config)
+
     s_channel = serialPlot('COM3', 19200, 4)  # dataNumBytes 4  : number of bytes of 1 data point
     s_channel.readSerialStart()  # starts background thread
 
@@ -19,7 +24,9 @@ def main(config):
     ready.wait()
     tn.write(b"STARTACQ\r\n")
 
-    env = Environment(my_thread, s_channel)
+    writer = SummaryWriter(logdir=config["log_dir"])
+
+    env = Environment(config, my_thread, s_channel)
     # env = DummyEnv()
     q = Qnet(config["learning_rate"], config["gamma"])
     q_target = Qnet(config["learning_rate"], config["gamma"])
@@ -29,10 +36,9 @@ def main(config):
     time.sleep(2) # for waiting dw thread to be ready
 
     score = 0.0
-    scores = []
-    episodes = []
+    avg_loss = 0.0
 
-    for n_epi in range(500):
+    for n_epi in range(5000):
         epsilon = max(config["fin_eps"], config["init_eps"] - 0.01 * (n_epi))  # Linear annealing from 8% to 1%
         s = env.reset()
         done = False
@@ -42,9 +48,9 @@ def main(config):
             t1 = time.time()
             a = q.sample_action(torch.from_numpy(s).float(), epsilon)
 
-            if step % 10 == 0:
-                print(step, score, a)
-            # a = 0
+            # if step % 10 == 0:
+            #     print(step, score, a)
+            a = 0
             s_prime, r, done = env.step(a)
             done_mask = 0.0 if done else 1.0
             memory.put((s, a, r, s_prime, done_mask))
@@ -61,38 +67,36 @@ def main(config):
                 time.sleep(config["decision_period"]-t2)
 
         if memory.size() > config["train_start_buffer_size"]:
-            q.train_net(q_target, memory, config["batch_size"])
+            avg_loss = q.train_net(q_target, memory, config["batch_size"])
 
         if n_epi % config["print_interval"] == 0 and n_epi != 0:
             print("n_episode :{}, score : {:.1f}, n_buffer : {}, eps : {:.1f}%".format(
                 n_epi, score / config["print_interval"], memory.size(), epsilon * 100))
-            score = 0.0
+            write_summary(writer, n_epi, score, q.optimization_step, avg_loss, epsilon, env)
 
         if n_epi % config["target_update_interval"] == 0 and n_epi != 0:
             q_target.load_state_dict(q.state_dict())
 
-        # 에피소드마다 학습 결과 그래프로 저장
-        scores.append(score)
-        episodes.append(n_epi)
-        pylab.plot(episodes, scores, 'b')
-        pylab.xlabel("episodes")
-        pylab.ylabel("score")
-        pylab.savefig("./save_graph/flppingdrone_graph.png")
-        torch.save(q.state_dict(), "./save_graph/flappingdrone_model.py")
+        if n_epi % config["model_save_interval"] == 0:
+            save_model(config, q)
 
-    env.close()
+        score = 0.0
+
 
 if __name__ == "__main__":
     config = {
         "buffer_limit" : 3000,
         "gamma" : 0.98,
         "learning_rate" : 0.0001,
-        "print_interval" : 5,
+        "print_interval" : 1,
         "target_update_interval": 2,
         "batch_size" : 64,
         "init_eps" : 1.0,
         "fin_eps" : 0.0,
-        "train_start_buffer_size" : 2000,
+        "train_start_buffer_size" : 1000,
         "decision_period" : 0.05,
+        "model_save_interval" : 5,
+        "max_episode_len" : 100,
+        "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
     }
     main(config)

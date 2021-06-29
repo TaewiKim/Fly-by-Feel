@@ -100,7 +100,7 @@ def get_dewe_thread():
     tn.write(b"LISTUSEDCHS\r\n")  # here we get list of all used channels
     list_of_used_ch = process_listusedchs(tn.read_until(b'+ETX end list\r\n'), float(sample_rate_str))
 
-    list_of_used_ch = prepare_channels([1], list_of_used_ch)  # filter channels
+    list_of_used_ch = prepare_channels([0], list_of_used_ch)  # filter channels
     tn.write(
         b'/stx preparetransfer\r\nCH 0\r\nCH 1\r\nCH 2\r\n/etx\r\n')  # here we select which channels we want to transfer
     print(tn.read_some())
