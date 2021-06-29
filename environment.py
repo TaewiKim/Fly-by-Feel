@@ -23,6 +23,7 @@ class Environment:
         self.action_count = np.array([0, 0, 0])
         self.angle_sum = 0
         self.state.extend(np.zeros(100))
+        self.max_s, self.min_s = -100000.0, 1000000.0
 
 
     def get_current_state(self):
@@ -32,6 +33,9 @@ class Environment:
         self.angle_sum += angle
         if done:
             self.stop_drone()
+
+        self.max_s = max(self.max_s, np.max(input_state))
+        self.min_s = min(self.min_s, np.min(input_state))
 
         return np.array([self.state]), reward, done
 
@@ -54,7 +58,6 @@ class Environment:
         reward = 0
         done = False
         angle = self.serial_channel.getSerialData()
-
 
         if angle > 0:
             reward = angle/(50.0*100)
