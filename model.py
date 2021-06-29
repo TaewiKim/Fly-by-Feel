@@ -57,20 +57,27 @@ class Qnet(nn.Module):
 class QnetConv(nn.Module):
     def __init__(self, learning_rate, gamma):
         super(QnetConv, self).__init__()
-        self.fc1 = nn.Linear(100, 256)
-        self.fc2 = nn.Linear(256, 256)
-        self.fc3 = nn.Linear(256, 256)
-        self.fc4 = nn.Linear(256, 3)
+        self.fc1 = nn.Linear(22*32, 256)
+        self.fc2 = nn.Linear(256, 3)
+
+        self.conv1 = nn.Conv1d(1, 32, 5)
+        self.pool1 = nn.MaxPool1d(2)
+        self.conv2 = nn.Conv1d(32, 32, 5)
+        self.pool2 = nn.MaxPool1d(2)
 
         self.gamma = gamma
         self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
         self.optimization_step = 0
 
     def forward(self, x):
+        x = x.unsqueeze(1)
+        x = self.pool1(F.relu(self.conv1(x)))
+        x = self.pool2(F.relu(self.conv2(x)))
+
+        x = x.reshape(-1, 22*32)
         x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
-        x = self.fc4(x)
+        x = self.fc2(x)
+
         return x
 
     def sample_action(self, obs, epsilon):

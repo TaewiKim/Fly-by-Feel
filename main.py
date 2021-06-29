@@ -1,7 +1,7 @@
 from utils.dwclient import get_dewe_thread
 from utils.serialChannel import serialPlot
 from environment import Environment, DummyEnv
-from model import Qnet
+from model import Qnet, QnetConv
 import torch
 from replayBuffer import ReplayBuffer
 import time, os
@@ -28,8 +28,8 @@ def main(config):
 
     env = Environment(config, my_thread, s_channel)
     # env = DummyEnv()
-    q = Qnet(config["learning_rate"], config["gamma"])
-    q_target = Qnet(config["learning_rate"], config["gamma"])
+    q = QnetConv(config["learning_rate"], config["gamma"])
+    q_target = QnetConv(config["learning_rate"], config["gamma"])
     q_target.load_state_dict(q.state_dict())
     memory = ReplayBuffer(config["buffer_limit"])
 
@@ -91,8 +91,8 @@ if __name__ == "__main__":
         "print_interval" : 1,
         "target_update_interval": 2,
         "batch_size" : 64,
-        "init_eps" : 1.0,
-        "fin_eps" : 0.0,
+        "init_eps" : 0.5,
+        "fin_eps" : 0.01,
         "train_start_buffer_size" : 1000,
         "decision_period" : 0.05,
         "model_save_interval" : 5,
