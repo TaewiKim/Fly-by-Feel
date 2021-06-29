@@ -40,7 +40,7 @@ def main(config):
     avg_loss = 0.0
 
     for n_epi in range(5000):
-        epsilon = max(config["fin_eps"], config["init_eps"] - 0.01 * (n_epi))  # Linear annealing from 8% to 1%
+        epsilon = max(config["fin_eps"], config["init_eps"] - 0.005 * (n_epi))  # Linear annealing from 8% to 1%
         env.reset()
         done = False
         step = 0
@@ -99,7 +99,7 @@ if __name__ == "__main__":
         "print_interval" : 1,
         "target_update_interval": 3,
         "batch_size" : 32,
-        "init_eps" : 0.4,
+        "init_eps" : 0.3,
         "fin_eps" : 0.03,
         "train_start_buffer_size" : 1000,
         "decision_period" : 0.05,
