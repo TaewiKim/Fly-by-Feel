@@ -29,8 +29,8 @@ def main(config):
 
     env = Environment(config, my_thread, s_channel)
     # env = DummyEnv()
-    q = QnetConv(config["learning_rate"], config["gamma"])
-    q_target = QnetConv(config["learning_rate"], config["gamma"])
+    q = QnetConv(config["learning_rate"], config["gamma"], config["n_action"])
+    q_target = QnetConv(config["learning_rate"], config["gamma"], config["n_action"])
     q_target.load_state_dict(q.state_dict())
     memory = ReplayBuffer(config["buffer_limit"])
 
@@ -39,7 +39,7 @@ def main(config):
     score = 0.0
     avg_loss = 0.0
 
-    for n_epi in range(5000):
+    for n_epi in range(2000):
         epsilon = max(config["fin_eps"], config["init_eps"] - 0.005 * (n_epi))  # Linear annealing from 8% to 1%
         env.reset()
         done = False
@@ -88,8 +88,16 @@ def main(config):
         if n_epi % config["model_save_interval"] == 0:
             save_model(config, q)
 
+        if n_epi % 30 == 0:
+            env.stop_drone()
+            time.sleep(60)
+
+
+        env.stop_drone()
+        # time.sleep(2)
         score = 0.0
 
+    env.stop_drone()
 
 if __name__ == "__main__":
     config = {
@@ -103,8 +111,9 @@ if __name__ == "__main__":
         "fin_eps" : 0.03,
         "train_start_buffer_size" : 1000,
         "decision_period" : 0.05,
-        "model_save_interval" : 10,
+        "model_save_interval" : 20,
         "max_episode_len" : 200, # 0.05*200 = 10 sec
+        "n_action" : 4,
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
     }
     main(config)

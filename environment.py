@@ -3,6 +3,7 @@ from utils.serialChannel import serialPlot
 import copy
 from collections import deque
 
+
 class Environment:
     def __init__(self, config, dw_thread, serial_channel: serialPlot):
         self.config = config
@@ -10,25 +11,23 @@ class Environment:
         self.serial_channel = serial_channel
         self.step_count = 0
         self.warning_count = 0
-        self.action_count = np.array([0,0,0])
+        self.action_count = np.zeros(config["n_action"])
         self.angle_sum = 0
 
-        self.state = deque(maxlen=100)
 
     def reset(self):
         self.stop_drone()
 
         self.step_count = 0
         self.warning_count = 0
-        self.action_count = np.array([0, 0, 0])
+        self.action_count = np.zeros(self.config["n_action"])
         self.angle_sum = 0
-        self.state.extend(np.zeros(100))
         self.max_s, self.min_s = -100000.0, 1000000.0
 
 
     def get_current_state(self):
-        input_state = copy.deepcopy(self.dw_thread.channel_data)
-        self.state.extend(input_state)
+        input_state = copy.deepcopy(self.dw_thread.state)
+
         reward, done, angle = self.calc_reward_done()
         self.angle_sum += angle
         if done:
@@ -37,7 +36,7 @@ class Environment:
         self.max_s = max(self.max_s, np.max(input_state))
         self.min_s = min(self.min_s, np.min(input_state))
 
-        return np.array([self.state]), reward, done
+        return np.array([input_state]), reward, done
 
 
     def step(self, action):
@@ -47,10 +46,13 @@ class Environment:
             self.stop_drone()
 
         elif action == 1:  # medium force
-            self.serial_channel.serialConnection.write("S80%".encode())
+            self.serial_channel.serialConnection.write("S150%".encode())
 
-        # elif action == 2:  # strong force
-        #     self.serial_channel.serialConnection.write("S80%".encode())
+        elif action == 2:  # medium force
+            self.serial_channel.serialConnection.write("S200%".encode())
+
+        elif action == 3:  # medium force
+            self.serial_channel.serialConnection.write("S250%".encode())
 
         self.action_count[action] += 1
 

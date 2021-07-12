@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
 import time
+import collections
 
 
 HOST = ''  # Symbolic name meaning all available interfaces
@@ -106,6 +107,8 @@ class MyThread(threading.Thread):
         self.list_of_used_ch = list_of_used_ch
         self.buffer_data = b''
         self.time = time.time()
+        self.state = collections.deque(maxlen=128)
+
 
     def run(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -177,8 +180,8 @@ class MyThread(threading.Thread):
                             channel_data)
                         # print(len(channel_data), time.time() - self.time, channel_data)
                         # self.channel_data = ((np.array(channel_data[-32:]) * 10 ** 38) - 5.525) / 0.15
-                        self.channel_data = (np.array(channel_data[-32:])) / 200000 - 132.7
-
+                        self.channel_data = (np.array(channel_data[-32:])) / 200000 - 133.7
+                        self.state.extend(self.channel_data)
                         # print(self.channel_data)
 
 
