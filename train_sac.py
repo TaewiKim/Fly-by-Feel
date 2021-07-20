@@ -1,14 +1,14 @@
 from utils.dwclient import get_dewe_thread
 from utils.serialChannel import serialPlot
 from environment import Environment, DummyEnv
-from models.sac_model import PolicyNet, QNet
+from models.sac_model import PolicyNet, QNet, calc_target
 import torch
 from replayBuffer import ReplayBuffer
 import time, os
 import pylab
 from tensorboardX import SummaryWriter
 from datetime import datetime, timedelta
-from utils.util import save_config, save_model, write_summary
+from utils.util import save_config, save_sac_model as save_model, write_summary
 import numpy as np
 
 
@@ -35,7 +35,7 @@ def main(config):
 
     lr_q, tau = config["lr_q"], config["tau"]
     q1, q2, q1_target, q2_target = QNet(lr_q, tau), QNet(lr_q, tau), QNet(lr_q, tau), QNet(lr_q, tau)
-    pi = PolicyNet(config["lr_pi"], config["init_alpha"], config["lr_alpha"])
+    pi = PolicyNet(config["lr_pi"], config["init_alpha"], config["lr_alpha"], config["target_entropy"])
 
     q1_target.load_state_dict(q1.state_dict())
     q2_target.load_state_dict(q2.state_dict())
@@ -46,8 +46,10 @@ def main(config):
 
     score = 0.0
     avg_loss = 0.0
+    n_epi = 0
 
     for i in range(2000):
+        print(i)
         env.reset()
         done = False
         step = 0
@@ -57,8 +59,8 @@ def main(config):
         while not done:
             t1 = time.time()
             s, r, done = env.get_current_state()
-            # a, _ = pi(torch.from_numpy(s).float().unsqueeze(1))
-            a = torch.tensor([0.])
+            a, _ = pi(torch.from_numpy(s).float().unsqueeze(1))
+            # a = torch.tensor([-1.]) # equal to 0 power
             env.step(a)
 
             done_mask = 0.0 if done else 1.0
@@ -69,7 +71,7 @@ def main(config):
             step += 1
             score += r
             if done:
-                n_epi += 1
+                print("n_episode :{}, score : {:.1f}, n_buffer : {}".format(n_epi, score, memory.size()))
                 break
 
             t2 = time.time()-t1
@@ -78,15 +80,12 @@ def main(config):
             if t2 < config["decision_period"]:
                 time.sleep(config["decision_period"]-t2)
 
-            # if step % 10 == 0:
-            #     print(step, score, a)
-
         train_t = 0.0
         if memory.size() > config["train_start_buffer_size"]:
             train_t_lst, loss_lst = [], []
             for i in range(20):
                 t1 = time.time()
-                mini_batch = memory.sample(batch_size)
+                mini_batch = memory.sample(config["batch_size"])
                 td_target = calc_target(pi, q1_target, q2_target, mini_batch, config["gamma"])
                 loss1 = q1.train_net(td_target, mini_batch)
                 loss2 = q2.train_net(td_target, mini_batch)
@@ -97,17 +96,13 @@ def main(config):
                 train_t_lst.append(time.time()-t1)
                 loss_lst.append(loss1)
 
-            print("n_episode :{}, score : {:.1f}, n_buffer : {}, eps : {:.1f}%".format(
-                n_epi, score, memory.size(), epsilon * 100))
-            write_summary(writer, config, n_epi, score, q.optimization_step, np.mean(loss_lst), epsilon, env, loop_t/float(step), np.mean(train_t_lst))
+            write_summary(writer, config, n_epi, score, pi.optimization_step, np.mean(loss_lst), 0.0, env, loop_t/float(step), np.mean(train_t_lst))
 
-        if n_epi % config["target_update_interval"] == 0 and n_epi != 0:
-            q_target.load_state_dict(q.state_dict())
 
         if n_epi % config["model_save_interval"] == 0:
-            save_model(config, q, n_epi)
+            save_model(config, q1, q2, pi, n_epi)
 
-        if n_epi % 30 == 0:
+        if n_epi % 30 == 0 and n_epi != 0:
             env.stop_drone()
             time.sleep(60)
 
@@ -115,6 +110,7 @@ def main(config):
         env.stop_drone()
         time.sleep(1)
         score = 0.0
+        n_epi += 1
 
     env.stop_drone()
 
@@ -139,7 +135,6 @@ if __name__ == "__main__":
         "max_episode_len" : 200, # 0.05*200 = 10 sec
 
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
-        "trained_model_path" : "logs/[07-19]baseline2/model_34720.tar",
-        # "trained_model_path": "logs/[07-16]baseline1/model_19920.tar"
+        "trained_model_path": None,
     }
     main(config)

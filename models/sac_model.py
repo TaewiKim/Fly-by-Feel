@@ -7,7 +7,7 @@ import numpy as np
 
 
 class PolicyNet(nn.Module):
-    def __init__(self, learning_rate, init_alpha, lr_alpha):
+    def __init__(self, learning_rate, init_alpha, lr_alpha, target_entropy):
         super(PolicyNet, self).__init__()
         self.conv1 = nn.Conv1d(1, 32, 5)
         self.pool1 = nn.MaxPool1d(2)
@@ -22,6 +22,9 @@ class PolicyNet(nn.Module):
         self.log_alpha = torch.tensor(np.log(init_alpha))
         self.log_alpha.requires_grad = True
         self.log_alpha_optimizer = optim.Adam([self.log_alpha], lr=lr_alpha)
+
+        self.optimization_step = 0
+        self.target_entropy = target_entropy
 
     def forward(self, x):
         x = self.pool1(F.relu(self.conv1(x)))
@@ -52,9 +55,10 @@ class PolicyNet(nn.Module):
         self.optimizer.zero_grad()
         loss.mean().backward()
         self.optimizer.step()
+        self.optimization_step +=1
 
         self.log_alpha_optimizer.zero_grad()
-        alpha_loss = -(self.log_alpha.exp() * (log_prob + target_entropy).detach()).mean()
+        alpha_loss = -(self.log_alpha.exp() * (log_prob + self.target_entropy).detach()).mean()
         alpha_loss.backward()
         self.log_alpha_optimizer.step()
 

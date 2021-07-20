@@ -66,14 +66,13 @@ class Environment:
 
         else:
             action_power = ((action+1)/2.0) * 250  # action : real number between -1 ~ 1
-            print(action_power, action)
             action_str = "S" + str(int(action_power)) + "%"
             self.serial_channel.serialConnection.write(action_str.encode())
 
     def calc_reward_done(self):
         done = False
         angle = self.serial_channel.getSerialData()
-        reward = angle/(10.0*100)
+        reward = angle/(10.0*20)
 
         if self.step_count >= self.config["max_episode_len"]:
             done = True
