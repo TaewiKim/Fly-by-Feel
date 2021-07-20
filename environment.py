@@ -7,12 +7,14 @@ from collections import deque
 class Environment:
     def __init__(self, config, dw_thread, serial_channel: serialPlot):
         self.config = config
+        self.is_discrete = config["is_discrete"]
         self.dw_thread = dw_thread
         self.serial_channel = serial_channel
         self.step_count = 0
         self.warning_count = 0
-        self.action_count = np.zeros(config["n_action"])
         self.angle_sum = 0
+        if config["is_discrete"]:
+            self.action_count = np.zeros(config["n_action"])
 
 
     def reset(self):
@@ -20,8 +22,10 @@ class Environment:
 
         self.step_count = 0
         self.warning_count = 0
-        self.action_count = np.zeros(self.config["n_action"])
+        if self.is_discrete:
+            self.action_count = np.zeros(self.config["n_action"])
         self.angle_sum = 0
+        self.max_angle, self.min_angle = -100000.0, 1000000.0
         self.max_s, self.min_s = -100000.0, 1000000.0
 
 
@@ -29,10 +33,13 @@ class Environment:
         input_state = copy.deepcopy(self.dw_thread.state)
 
         reward, done, angle = self.calc_reward_done()
+        self.max_angle = max(self.max_angle, angle)
+        self.min_angle = min(self.min_angle, angle)
         self.angle_sum += angle
         if done:
             self.stop_drone()
 
+        # print(self.step_count, np.array([input_state]))
         self.max_s = max(self.max_s, np.max(input_state))
         self.min_s = min(self.min_s, np.min(input_state))
 
@@ -42,33 +49,31 @@ class Environment:
     def step(self, action):
         self.step_count += 1
 
-        if action == 0:  # no action
-            self.stop_drone()
+        if self.is_discrete:
+            if action == 0:  # no action
+                self.stop_drone()
 
-        elif action == 1:  # medium force
-            self.serial_channel.serialConnection.write("S150%".encode())
+            elif action == 1:  # medium force
+                self.serial_channel.serialConnection.write("S150%".encode())
 
-        elif action == 2:  # medium force
-            self.serial_channel.serialConnection.write("S200%".encode())
+            elif action == 2:  # medium force
+                self.serial_channel.serialConnection.write("S200%".encode())
 
-        elif action == 3:  # medium force
-            self.serial_channel.serialConnection.write("S250%".encode())
+            elif action == 3:  # medium force
+                self.serial_channel.serialConnection.write("S250%".encode())
 
-        self.action_count[action] += 1
+            self.action_count[action] += 1
+
+        else:
+            action_power = ((action+1)/2.0) * 250  # action : real number between -1 ~ 1
+            print(action_power, action)
+            action_str = "S" + str(int(action_power)) + "%"
+            self.serial_channel.serialConnection.write(action_str.encode())
 
     def calc_reward_done(self):
-        reward = 0
         done = False
         angle = self.serial_channel.getSerialData()
-
-        if angle > 0:
-            reward = angle/(20.0*100)
-        if angle < -10:
-            self.warning_count += 1
-
-        if self.warning_count >= 500:
-            done = True
-            reward = -10
+        reward = angle/(10.0*100)
 
         if self.step_count >= self.config["max_episode_len"]:
             done = True

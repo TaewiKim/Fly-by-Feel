@@ -10,9 +10,10 @@ def save_config(arg_dict):
     f.write(args_info)
     f.close()
 
-def save_model(config, model):
+def save_model(config, model, n_epi):
     model_dict = {
         'optimization_step': model.optimization_step,
+        'n_epi' : n_epi,
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': model.optimizer.state_dict(),
     }
@@ -20,10 +21,12 @@ def save_model(config, model):
     path = config["log_dir"] + f"/model_{model.optimization_step}.tar"
     torch.save(model_dict, path)
 
-def write_summary(writer, n_epi, score, optimization_step, avg_loss, epsilon, env:Environment, avg_loop_t, train_t):
+def write_summary(writer, config, n_epi, score, optimization_step, avg_loss, epsilon, env:Environment, avg_loop_t, train_t):
     writer.add_scalar('agent/score', score, n_epi)
     writer.add_scalar('agent/eps', epsilon, n_epi)
     writer.add_scalar('agent/avg_angle', env.angle_sum/float(env.step_count), n_epi)
+    writer.add_scalar('agent/max_angle', env.max_angle, n_epi)
+    writer.add_scalar('agent/min_angle', env.min_angle, n_epi)
     writer.add_scalar('agent/len_epi', env.step_count, n_epi)
     writer.add_scalar('train/step', optimization_step, n_epi)
     writer.add_scalar('train/loss', avg_loss, n_epi)
@@ -31,7 +34,8 @@ def write_summary(writer, n_epi, score, optimization_step, avg_loss, epsilon, en
     writer.add_scalar('time/train', train_t, n_epi)
     writer.add_scalar('state/max_val', env.max_s, n_epi)
     writer.add_scalar('state/min_val', env.min_s, n_epi)
-    writer.add_scalar('action/ratio_motor_power_0', env.action_count[0] / float(np.sum(env.action_count)), n_epi)
-    writer.add_scalar('action/ratio_motor_power_150', env.action_count[1] / float(np.sum(env.action_count)), n_epi)
-    writer.add_scalar('action/ratio_motor_power_200', env.action_count[2] / float(np.sum(env.action_count)), n_epi)
-    writer.add_scalar('action/ratio_motor_power_250', env.action_count[3] / float(np.sum(env.action_count)), n_epi)
+    if config["is_discrete"]:
+        writer.add_scalar('action/ratio_motor_power_0', env.action_count[0] / float(np.sum(env.action_count)), n_epi)
+        writer.add_scalar('action/ratio_motor_power_150', env.action_count[1] / float(np.sum(env.action_count)), n_epi)
+        writer.add_scalar('action/ratio_motor_power_200', env.action_count[2] / float(np.sum(env.action_count)), n_epi)
+        writer.add_scalar('action/ratio_motor_power_250', env.action_count[3] / float(np.sum(env.action_count)), n_epi)

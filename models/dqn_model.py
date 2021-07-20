@@ -8,7 +8,7 @@ import numpy as np
 class Qnet(nn.Module):
     def __init__(self, learning_rate, gamma):
         super(Qnet, self).__init__()
-        self.fc1 = nn.Linear(128, 256)
+        self.fc1 = nn.Linear(160, 256)
         self.fc2 = nn.Linear(256, 256)
         self.fc3 = nn.Linear(256, 256)
         self.fc4 = nn.Linear(256, 3)
@@ -63,7 +63,7 @@ class QnetConv(nn.Module):
         self.conv2 = nn.Conv1d(32, 32, 5)
         self.pool2 = nn.MaxPool1d(2)
 
-        self.fc1 = nn.Linear(29*32, 256)
+        self.fc1 = nn.Linear(37*32, 256)
         self.fc2 = nn.Linear(256, n_action)
 
         self.n_action = n_action
@@ -75,7 +75,8 @@ class QnetConv(nn.Module):
         x = self.pool1(F.relu(self.conv1(x)))
         x = self.pool2(F.relu(self.conv2(x)))
 
-        x = x.reshape(-1, 29*32)
+        x = x.reshape(-1, 37*32)
+
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
 
