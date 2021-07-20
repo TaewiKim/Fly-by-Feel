@@ -63,8 +63,11 @@ def main(config):
         while not done:
             t1 = time.time()
             s, r, done = env.get_current_state()
-            a = q.sample_action(torch.from_numpy(s).float().unsqueeze(1), epsilon)
-            # a = 0
+            a = q.sample_action(torch.from_numpy(s).float().unsqueeze(1), epsilon)   # for train
+            # a = 0   # for no action
+            # a = 3   # for max power
+            # a = q.sample_action(torch.from_numpy(s).float().unsqueeze(1), 1.0)  # for random
+
             env.step(a)
 
             done_mask = 0.0 if done else 1.0
@@ -118,7 +121,7 @@ if __name__ == "__main__":
         "batch_size" : 32,
         "init_eps" : 0.3,
         "fin_eps" : 0.03,
-        "train_start_buffer_size" : 100,
+        "train_start_buffer_size" : 1000,
         "decision_period" : 0.05,
         "model_save_interval" : 20,
         "max_episode_len" : 200, # 0.05*200 = 10 sec

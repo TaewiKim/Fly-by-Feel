@@ -12,8 +12,6 @@ from utils.util import save_config, save_sac_model as save_model, write_summary
 import numpy as np
 
 
-
-
 def main(config):
     np.set_printoptions(precision=3)
     save_config(config)

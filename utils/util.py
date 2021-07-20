@@ -33,7 +33,6 @@ def save_dqn_model(config, model, n_epi):
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': model.optimizer.state_dict(),
     }
-
     path = config["log_dir"] + f"/dqn_model_{model.optimization_step}.tar"
     torch.save(model_dict, path)
 

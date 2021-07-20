@@ -1,0 +1,10 @@
+
+.ipynb_checkpoints/
+*.ipynb
+__pycache__/
+examples/__pycache__/
+logs/
+models/__pycache__/
+prev_logs/
+save_graph/
+utils/__pycache__/
