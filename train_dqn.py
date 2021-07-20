@@ -91,7 +91,7 @@ def main(config):
         train_t = 0.0
         if memory.size() > config["train_start_buffer_size"]:
             avg_loss, train_t = q.train_net(q_target, memory, config["batch_size"])
-            write_summary(writer, config, n_epi, score, q.optimization_step, avg_loss, epsilon, env, loop_t/float(step), train_t)
+            write_summary(writer, config, n_epi, score, q.optimization_step, avg_loss, epsilon, env, loop_t/float(step), train_t, 0.0)
 
         if n_epi % config["target_update_interval"] == 0 and n_epi != 0:
             q_target.load_state_dict(q.state_dict())

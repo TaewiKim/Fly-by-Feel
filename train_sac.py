@@ -94,7 +94,7 @@ def main(config):
                 train_t_lst.append(time.time()-t1)
                 loss_lst.append(loss1)
 
-            write_summary(writer, config, n_epi, score, pi.optimization_step, np.mean(loss_lst), 0.0, env, loop_t/float(step), np.mean(train_t_lst))
+            write_summary(writer, config, n_epi, score, pi.optimization_step, np.mean(loss_lst), 0.0, env, loop_t/float(step), np.mean(train_t_lst), pi.log_alpha.exp().item())
 
 
         if n_epi % config["model_save_interval"] == 0:

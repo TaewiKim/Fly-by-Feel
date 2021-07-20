@@ -36,12 +36,13 @@ def save_dqn_model(config, model, n_epi):
     path = config["log_dir"] + f"/dqn_model_{model.optimization_step}.tar"
     torch.save(model_dict, path)
 
-def write_summary(writer, config, n_epi, score, optimization_step, avg_loss, epsilon, env:Environment, avg_loop_t, train_t):
+def write_summary(writer, config, n_epi, score, optimization_step, avg_loss, epsilon, env:Environment, avg_loop_t, train_t, alpha):
     writer.add_scalar('agent/score', score, n_epi)
     writer.add_scalar('agent/avg_angle', env.angle_sum/float(env.step_count), n_epi)
     writer.add_scalar('agent/max_angle', env.max_angle, n_epi)
     writer.add_scalar('agent/min_angle', env.min_angle, n_epi)
     writer.add_scalar('agent/len_epi', env.step_count, n_epi)
+    writer.add_scalar('train/alpha', alpha, n_epi)
     writer.add_scalar('train/step', optimization_step, n_epi)
     writer.add_scalar('train/loss', avg_loss, n_epi)
     writer.add_scalar('time/loop', avg_loop_t, n_epi)
