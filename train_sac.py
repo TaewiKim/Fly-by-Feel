@@ -35,6 +35,23 @@ def main(config):
     q1, q2, q1_target, q2_target = QNet(lr_q, tau), QNet(lr_q, tau), QNet(lr_q, tau), QNet(lr_q, tau)
     pi = PolicyNet(config["lr_pi"], config["init_alpha"], config["lr_alpha"], config["target_entropy"])
 
+
+    if config["trained_model_path"]:
+        checkpoint = torch.load(config["trained_model_path"])
+        pi.optimization_step = checkpoint['optimization_step']
+        q1.load_state_dict(checkpoint['q1_state_dict'])
+        q2.load_state_dict(checkpoint['q2_state_dict'])
+        pi.load_state_dict(checkpoint['pi_state_dict'])
+
+        q1.optimizer.load_state_dict(checkpoint['q1_optimizer_state_dict'])
+        q2.optimizer.load_state_dict(checkpoint['q2_optimizer_state_dict'])
+        pi.optimizer.load_state_dict(checkpoint['pi_optimizer_state_dict'])
+        pi.log_alpha_optimizer.load_state_dict(checkpoint['alpha_optimizer_state_dict'])
+        if 'n_epi' in checkpoint:
+            n_epi = checkpoint['n_epi']
+        print("Trained model", config["trained_model_path"], "suffessfully loaded")
+
+
     q1_target.load_state_dict(q1.state_dict())
     q2_target.load_state_dict(q2.state_dict())
 
