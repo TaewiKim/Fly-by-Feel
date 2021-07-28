@@ -70,6 +70,7 @@ def main(config):
         step = 0
         loop_t = 0.0
         prev_s, prev_a = None, None
+        init_t = time.time()
 
         while not done:
             t1 = time.time()
@@ -91,6 +92,11 @@ def main(config):
 
             t2 = time.time()-t1
             loop_t += t2
+
+            if config["print_mode"]:
+                print("epi:{}, step:{}, time:{:.3f}, angle:{:.2f}, action:{}".format(
+                    i, step, time.time()-init_t, env.cur_angle, ((a+1)/2.0) * 150 + 100))
+
 
             if t2 < config["decision_period"]:
                 time.sleep(config["decision_period"]-t2)
@@ -151,5 +157,6 @@ if __name__ == "__main__":
 
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
         "trained_model_path": None,
+        "print_mode" : True,
     }
     main(config)

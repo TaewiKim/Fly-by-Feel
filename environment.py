@@ -13,6 +13,7 @@ class Environment:
         self.step_count = 0
         self.warning_count = 0
         self.angle_sum = 0
+        self.cur_angle = 0
         if config["is_discrete"]:
             self.action_count = np.zeros(config["n_action"])
 
@@ -25,6 +26,7 @@ class Environment:
         if self.is_discrete:
             self.action_count = np.zeros(self.config["n_action"])
         self.angle_sum = 0
+        self.cur_angle = 0
         self.max_angle, self.min_angle = -100000.0, 1000000.0
         self.max_s, self.min_s = -100000.0, 1000000.0
 
@@ -75,6 +77,7 @@ class Environment:
     def calc_reward_done(self):
         done = False
         angle = self.serial_channel.getSerialData()
+        self.cur_angle = angle
         if angle > 360 or angle < -360:
             angle = 0
         reward = angle/(10.0*20)
