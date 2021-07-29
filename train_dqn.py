@@ -29,7 +29,8 @@ def main(config):
     tn.write(b"STARTACQ\r\n")
 
     n_epi = 0
-    writer = SummaryWriter(logdir=config["log_dir"])
+    path = config["log_dir"]
+    writer = SummaryWriter(logdir=path)
     env = Environment(config, my_thread, s_channel)
     # env = DummyEnv()
     q = QnetConv(config["learning_rate"], config["gamma"], config["n_action"])
@@ -111,7 +112,7 @@ def main(config):
 
         if config["print_mode"]:
             df = pd.DataFrame(data_log)
-            df.to_csv(config["log_dir"]+"/epi_{}".format(i)+'.csv')
+            df.to_csv(path+'/'+ datetime.now().strftime("[%m-%d]%H.%M.%S")+"_epi_{}".format(n_epi)+'.csv')
 
         env.stop_drone()
         time.sleep(1)
@@ -139,7 +140,7 @@ if __name__ == "__main__":
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
         "target_angle": 50,  # When target_angle > 20, function become linear
         "print_mode": True,
-        "trained_model_path" : None,
-        # "trained_model_path" : "logs/[07-28]18.52.00/dqn_model_1120.tar",
+        # "trained_model_path" : None,
+        "trained_model_path" : "logs/[07-26]DQN2/dqn_model_2320.tar",
     }
     main(config)

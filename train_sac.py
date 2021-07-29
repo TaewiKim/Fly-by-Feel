@@ -28,7 +28,8 @@ def main(config):
     tn.write(b"STARTACQ\r\n")
 
     n_epi = 0
-    writer = SummaryWriter(logdir=config["log_dir"])
+    path = config["log_dir"]
+    writer = SummaryWriter(logdir=path)
     env = Environment(config, my_thread, s_channel)
     # env = DummyEnv()
 
@@ -95,7 +96,7 @@ def main(config):
             loop_t += t2
 
             if config["print_mode"]:
-                data_log.append([i, step, time.time()-init_t, env.cur_angle, a])
+                data_log.append([i, step, time.time()-init_t, env.cur_angle, ((a.detach().numpy()+1)/2.0 * 150 + 100)[0][0]])
 
 
             if t2 < config["decision_period"]:
@@ -130,7 +131,7 @@ def main(config):
 
         if config["print_mode"]:
             df = pd.DataFrame(data_log)
-            df.to_csv(config["log_dir"]+"/epi_{}".format(i)+'.csv')
+            df.to_csv(path+'/'+ datetime.now().strftime("[%m-%d]%H.%M.%S")+"_epi_{}".format(n_epi)+'.csv')
 
         env.stop_drone()
         time.sleep(1)
@@ -161,6 +162,6 @@ if __name__ == "__main__":
         "target_angle": 50,  # When target_angle > 20, function become linear
         "print_mode": True,
         "trained_model_path": None,
-        # "trained_model_path" : "logs/[07-27]20.38.08/sac_model_16320.tar"
+        # "trained_model_path" : "logs/[07-22]SAC_baseline/sac_model_3920.tar"
     }
     main(config)
