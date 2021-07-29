@@ -10,6 +10,7 @@ from tensorboardX import SummaryWriter
 from datetime import datetime, timedelta
 from utils.util import save_config, save_sac_model as save_model, write_summary
 import numpy as np
+import pandas as pd
 
 
 def main(config):
@@ -64,10 +65,10 @@ def main(config):
     n_epi = 0
 
     for i in range(2000):
-        print(i)
         env.reset()
         done = False
         step = 0
+        data_log = [['epi', 'step', 'time', 'angle', 'action']]
         loop_t = 0.0
         prev_s, prev_a = None, None
         init_t = time.time()
@@ -94,14 +95,14 @@ def main(config):
             loop_t += t2
 
             if config["print_mode"]:
-                print("epi:{}, step:{}, time:{:.3f}, angle:{:.2f}, action:{}".format(
-                    i, step, time.time()-init_t, env.cur_angle, ((a+1)/2.0) * 150 + 100))
+                data_log.append([i, step, time.time()-init_t, env.cur_angle, a])
 
 
             if t2 < config["decision_period"]:
                 time.sleep(config["decision_period"]-t2)
 
         train_t = 0.0
+        env.stop_drone()
         if memory.size() > config["train_start_buffer_size"]:
             train_t_lst, loss_lst = [], []
             for i in range(20):
@@ -127,6 +128,9 @@ def main(config):
             env.stop_drone()
             time.sleep(60)
 
+        if config["print_mode"]:
+            df = pd.DataFrame(data_log)
+            df.to_csv(config["log_dir"]+"/epi_{}".format(i)+'.csv')
 
         env.stop_drone()
         time.sleep(1)
@@ -149,14 +153,14 @@ if __name__ == "__main__":
         "target_entropy" : -1.0,
         "lr_alpha" : 0.001,
         "batch_size" : 32,
-
         "train_start_buffer_size" : 1000,
         "decision_period" : 0.05,
         "model_save_interval" : 20,
         "max_episode_len" : 200, # 0.05*200 = 10 sec
-
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
+        "target_angle": 50,  # When target_angle > 20, function become linear
+        "print_mode": True,
         "trained_model_path": None,
-        "print_mode" : True,
+        # "trained_model_path" : "logs/[07-27]20.38.08/sac_model_16320.tar"
     }
     main(config)

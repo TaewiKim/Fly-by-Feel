@@ -10,7 +10,7 @@ from tensorboardX import SummaryWriter
 from datetime import datetime, timedelta
 from utils.util import save_config, save_dqn_model as save_model, write_summary
 import numpy as np
-
+import pandas as pd
 
 
 
@@ -58,6 +58,7 @@ def main(config):
         done = False
         step = 0
         loop_t = 0.0
+        data_log = [['epi', 'step', 'time', 'angle', 'action']]
         prev_s, prev_a = None, None
         init_t = time.time()
 
@@ -87,13 +88,13 @@ def main(config):
             loop_t += t2
 
             if config["print_mode"]:
-                print("epi:{}, step:{}, time:{:.3f}, angle:{:.2f}, action:{}".format(
-                    i, step, time.time()-init_t, env.cur_angle, a))
+                data_log.append([i, step, time.time()-init_t, env.cur_angle, a])
 
             if t2 < config["decision_period"]:
                 time.sleep(config["decision_period"]-t2)
 
         train_t = 0.0
+        env.stop_drone()
         if memory.size() > config["train_start_buffer_size"]:
             avg_loss, train_t = q.train_net(q_target, memory, config["batch_size"])
             write_summary(writer, config, n_epi, score, q.optimization_step, avg_loss, epsilon, env, loop_t/float(step), train_t, 0.0)
@@ -107,6 +108,10 @@ def main(config):
         if n_epi % 30 == 0 and n_epi != 0:
             env.stop_drone()
             time.sleep(60)
+
+        if config["print_mode"]:
+            df = pd.DataFrame(data_log)
+            df.to_csv(config["log_dir"]+"/epi_{}".format(i)+'.csv')
 
         env.stop_drone()
         time.sleep(1)
@@ -132,9 +137,9 @@ if __name__ == "__main__":
         "max_episode_len" : 200, # 0.05*200 = 10 sec
         "n_action" : 4,
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
+        "target_angle": 50,  # When target_angle > 20, function become linear
+        "print_mode": True,
         "trained_model_path" : None,
-        "print_mode" : True,
-        # "trained_model_path" : "logs/[07-19]baseline2/model_34720.tar",
-        # "trained_model_path": "logs/[07-16]baseline1/model_19920.tar"
+        # "trained_model_path" : "logs/[07-28]18.52.00/dqn_model_1120.tar",
     }
     main(config)

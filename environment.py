@@ -8,6 +8,7 @@ class Environment:
     def __init__(self, config, dw_thread, serial_channel: serialPlot):
         self.config = config
         self.is_discrete = config["is_discrete"]
+        self.target_angle = config["target_angle"]
         self.dw_thread = dw_thread
         self.serial_channel = serial_channel
         self.step_count = 0
@@ -77,10 +78,14 @@ class Environment:
     def calc_reward_done(self):
         done = False
         angle = self.serial_channel.getSerialData()
-        self.cur_angle = angle
         if angle > 360 or angle < -360:
             angle = 0
-        reward = angle/(10.0*20)
+
+        self.cur_angle = angle
+        if self.target_angle > 20:
+            reward = angle/(10.0*20)
+        else:
+            reward = 2.718**(-0.5*(((angle-self.target_angle)/5)**2))/20
 
         if self.step_count >= self.config["max_episode_len"]:
             done = True
