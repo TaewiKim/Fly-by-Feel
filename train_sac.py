@@ -78,13 +78,15 @@ def main(config):
             t1 = time.time()
             s, r, done = env.get_current_state()
             a, _ = pi(torch.from_numpy(s).float().unsqueeze(1))
-            # a = torch.tensor([-1.]) # equal to 0 power
-            env.step(a)
+            a_np = a.detach().numpy()
+            a_np = a_np[0]
+            # a_np = [-1., -1.] # equal to 0 power
+            env.step(a_np)
 
             done_mask = 0.0 if done else 1.0
             if prev_s is not None:
-                memory.put((prev_s, prev_a.item(), r, s, done_mask))
-            prev_s, prev_a = s, a
+                memory.put((prev_s, a_np, r, s, done_mask))
+            prev_s, prev_a = s, a_np
 
             step += 1
             score += r
@@ -96,7 +98,7 @@ def main(config):
             loop_t += t2
 
             if config["print_mode"]:
-                data_log.append([i, step, time.time()-init_t, env.cur_angle, ((a.detach().numpy()+1)/2.0 * 150 + 100)[0][0]])
+                data_log.append([i, step, time.time()-init_t, env.cur_angle, ((a_flap+1)/2.0 * 150 + 100)[0][0]])
 
 
             if t2 < config["decision_period"]:
@@ -143,7 +145,7 @@ def main(config):
 if __name__ == "__main__":
     config = {
         "is_discrete": False,
-        "buffer_limit" : 3000,
+        "buffer_limit" : 3000,  #3000
         "gamma" : 0.98,
         "lr_pi" : 0.0005,
         "lr_q": 0.001,
@@ -154,7 +156,7 @@ if __name__ == "__main__":
         "target_entropy" : -1.0,
         "lr_alpha" : 0.001,
         "batch_size" : 32,
-        "train_start_buffer_size" : 1000,
+        "train_start_buffer_size" : 1000,  #1000
         "decision_period" : 0.05,
         "model_save_interval" : 30,
         "max_episode_len" : 300, # 0.05*300 = 15 sec

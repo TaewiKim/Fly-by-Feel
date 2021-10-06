@@ -49,26 +49,27 @@ class Environment:
         return np.array([input_state]), reward, done
 
 
-    def step(self, action):
+    def step(self, a):
+        [a_flap, a_tail] = a
         self.step_count += 1
 
         if self.is_discrete:
-            if action == 0:  # no action
+            if a_flap == 0:  # no action
                 self.stop_drone()
 
-            elif action == 1:  # medium force
+            elif a_flap == 1:  # medium force
                 self.serial_channel.serialConnection.write("S150%".encode())
 
-            elif action == 2:  # medium force
+            elif a_flap == 2:  # medium force
                 self.serial_channel.serialConnection.write("S200%".encode())
 
-            elif action == 3:  # medium force
+            elif a_flap == 3:  # medium force
                 self.serial_channel.serialConnection.write("S250%".encode())
 
             self.action_count[action] += 1
 
         else:
-            action_power = ((action+1)/2.0) * 150 + 100  # action : real number between -1 ~ 1
+            action_power = ((a_flap+1)/2.0) * 150 + 100  # action : real number between -1 ~ 1
             if action_power < 110:
                 action_str = "S0%"
             else:

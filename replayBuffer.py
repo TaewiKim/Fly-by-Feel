@@ -21,7 +21,7 @@ class ReplayBuffer:
             s_prime_lst.append(s_prime)
             done_mask_lst.append([done_mask])
 
-        return torch.tensor(s_lst, dtype=torch.float), torch.tensor(a_lst), \
+        return torch.tensor(s_lst, dtype=torch.float), torch.tensor(a_lst).squeeze(1),\
                torch.tensor(r_lst), torch.tensor(s_prime_lst, dtype=torch.float), \
                torch.tensor(done_mask_lst)
 
