@@ -82,10 +82,13 @@ class Environment:
             angle = 0
 
         self.cur_angle = angle
-        if self.target_angle > 20:
-            reward = angle/(10.0*20)
+        if self.target_angle > 50:
+            if angle > 49.5:
+                reward = -1
+            else:
+                reward = angle/(10.0*30)
         else:
-            reward = 2.718**(-0.5*(((angle-self.target_angle)/5)**2))/20
+            reward = 2.718**(-0.5*(((angle-self.target_angle)/10)**2))/20
 
         if self.step_count >= self.config["max_episode_len"]:
             done = True

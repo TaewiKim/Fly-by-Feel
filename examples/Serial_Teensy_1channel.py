@@ -11,7 +11,7 @@ import struct
 
 
 class serialPlot:
-    def __init__(self, serialPort = 'COM7', serialBaud = 115200, plotLength = 100, dataNumBytes = 4):
+    def __init__(self, serialPort = 'COM7', serialBaud = 19200, plotLength = 100, dataNumBytes = 4):
         self.port = serialPort
         self.baud = serialBaud
         self.plotMaxLength = plotLength
@@ -70,7 +70,7 @@ class serialPlot:
 
 def main():
     # portName = 'COM5'     # for windows users
-    portName = 'COM7'
+    portName = 'COM3'
     baudRate = 19200
     maxPlotLength = 100
     dataNumBytes = 4        # number of bytes of 1 data point
@@ -81,8 +81,8 @@ def main():
     pltInterval = 50    # Period at which the plot animation updates [ms]
     xmin = 0
     xmax = maxPlotLength
-    ymin = -(1)
-    ymax = 1
+    ymin = -(90)
+    ymax = 90
     fig = plt.figure()
     ax = plt.axes(xlim=(xmin, xmax), ylim=(float(ymin - (ymax - ymin) / 10), float(ymax + (ymax - ymin) / 10)))
     ax.set_title('Arduino Analog Read')

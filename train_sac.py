@@ -134,7 +134,7 @@ def main(config):
             df.to_csv(path+'/'+ datetime.now().strftime("[%m-%d]%H.%M.%S")+"_epi_{}".format(n_epi)+'.csv')
 
         env.stop_drone()
-        time.sleep(1)
+        time.sleep(3)
         score = 0.0
         n_epi += 1
 
@@ -156,12 +156,12 @@ if __name__ == "__main__":
         "batch_size" : 32,
         "train_start_buffer_size" : 1000,
         "decision_period" : 0.05,
-        "model_save_interval" : 20,
-        "max_episode_len" : 200, # 0.05*200 = 10 sec
+        "model_save_interval" : 30,
+        "max_episode_len" : 300, # 0.05*300 = 15 sec
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
-        "target_angle": 50,  # When target_angle > 20, function become linear
-        "print_mode": True,
+        "target_angle": 60,  # When target_angle > 50, function become linear
+        "print_mode": False,
         "trained_model_path": None,
-        # "trained_model_path" : "logs/[07-22]SAC_baseline/sac_model_3920.tar"
+        # "trained_model_path" : "logs/[09-28]09.05.04/sac_model_9560.tar"
     }
     main(config)

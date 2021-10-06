@@ -7,6 +7,7 @@ import dwserver_mod2
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import collections
+import copy
 
 DATA_TYPES = ['b', 'B', 'h', 'H', 'i', 'f', 'q', 'd']
 DATA_SIZE = [1, 1, 2, 2, 4, 4, 8, 8]
@@ -102,8 +103,9 @@ tn.write(b"LISTUSEDCHS\r\n") # here we get list of all used channels
 list_of_used_ch = process_listusedchs(tn.read_until(b'+ETX end list\r\n'), float(sample_rate_str))
 print(list_of_used_ch)
 
-list_of_used_ch = prepare_channels([0], list_of_used_ch) # filter channels
-tn.write(b'/stx preparetransfer\r\nCH 0\r\n/etx\r\n')
+list_of_used_ch = prepare_channels([0, 1], list_of_used_ch) # filter channels
+# print(list_of_used_ch)
+tn.write(b'/stx preparetransfer\r\nCH 0\r\nCH 1\r\nCH 2\r\n/etx\r\n')
 # tn.write(b'/stx preparetransfer\r\nCH 0\r\nCH 1\r\nCH 2\r\n/etx\r\n') # here we select which channels we want to transfer
 print(tn.read_some())
 
@@ -138,42 +140,12 @@ class DewePlot:
         lineValueText.set_text('[' + lineLabel + '] = ' + str(my_thread.channel_data))
         # self.csvData.append(self.data[-1])
 
-    # def close(self):
-    #     self.isRun = False
-    #     self.thread.join()
-    #     self.serialConnection.close()
-    #     print('Disconnected...')
-    #     # df = pd.DataFrame(self.csvData)
-    #     # df.to_csv('/home/rikisenia/Desktop/data.csv')
-
-# maxPlotLength = 1000
-# d = DewePlot(maxPlotLength)
-#
-# pltInterval = 100  # Period at which the plot animation updates [ms]
-# xmin = 0
-# xmax = maxPlotLength
-# ymin = -(170000)
-# ymax = 170000
-# fig = plt.figure()
-# ax = plt.axes(xlim=(xmin, xmax), ylim=(float(ymin - (ymax - ymin) / 10), float(ymax + (ymax - ymin) / 10)))
-# ax.set_title('DeweSoft Analog Read')
-# ax.set_xlabel("time")
-# ax.set_ylabel("AnalogRead Value")
-#
-# lineLabel = 'Resistance Value'
-# timeText = ax.text(0.50, 0.95, '', transform=ax.transAxes)
-# lines = ax.plot([], [], label=lineLabel)[0]
-# lineValueText = ax.text(0.50, 0.90, '', transform=ax.transAxes)
-# anim = animation.FuncAnimation(fig, d.getSerialData, fargs=(lines, lineValueText, lineLabel, timeText),
-#                                interval=pltInterval)  # fargs has to be a tuple
-#
-# plt.legend(loc="upper left")
-# plt.show()
-
 while True:
-    state = np.array([my_thread.channel_data,my_thread.channel_data])
+    state_ch1 = copy.deepcopy(my_thread.state_ch1)
+    state_ch2 = copy.deepcopy(my_thread.state_ch2)
     # state = np.reshape(state, [1, -1, 2, 1])
-    # print(state)
+    print(state_ch1)
+    print(state_ch2)
 
     time.sleep(0.01)
 

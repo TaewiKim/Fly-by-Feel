@@ -124,7 +124,7 @@ def main(config):
 if __name__ == "__main__":
     config = {
         "is_discrete": True,
-        "buffer_limit" : 3000,
+        "buffer_limit" : 5000,
         "gamma" : 0.98,
         "learning_rate" : 0.0001,
         "print_interval" : 1,
@@ -134,13 +134,13 @@ if __name__ == "__main__":
         "fin_eps" : 0.03,
         "train_start_buffer_size" : 1000,
         "decision_period" : 0.05,
-        "model_save_interval" : 20,
-        "max_episode_len" : 200, # 0.05*200 = 10 sec
+        "model_save_interval" : 30,
+        "max_episode_len" : 300, # 0.05*200 = 10 sec
         "n_action" : 4,
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
-        "target_angle": 50,  # When target_angle > 20, function become linear
-        "print_mode": True,
-        # "trained_model_path" : None,
-        "trained_model_path" : "logs/[07-26]DQN2/dqn_model_2320.tar",
+        "target_angle": 60,  # When target_angle > 50, function become linear
+        "print_mode": False,
+        "trained_model_path" : None,
+        # "trained_model_path" : "logs/[07-26]DQN2/dqn_model_2320.tar",
     }
     main(config)

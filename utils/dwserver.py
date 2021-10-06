@@ -107,7 +107,7 @@ class MyThread(threading.Thread):
         self.list_of_used_ch = list_of_used_ch
         self.buffer_data = b''
         self.time = time.time()
-        self.state = collections.deque(maxlen=160)
+        self.state = collections.deque(maxlen=320)
 
 
     def run(self):
@@ -179,9 +179,10 @@ class MyThread(threading.Thread):
                                                                               i].number_of_added_samples + len(
                             channel_data)
                         # print(len(channel_data), time.time() - self.time, channel_data)
-                        self.channel_data = ((np.array(channel_data[-32:]) * 10 ** 38) - 5.525) / 0.15
+                        # self.channel_data = (np.array(channel_data[-32:]) * 10 ** 38)*10-73.8
                         # self.channel_data = (np.array(channel_data[-32:])) / 200000 - 133.7
-                        self.state.extend(self.channel_data)
+                        if i == 1:
+                            self.state.extend(channel_data)
                         # print(self.channel_data)
 
 

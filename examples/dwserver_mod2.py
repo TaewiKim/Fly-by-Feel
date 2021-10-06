@@ -10,6 +10,7 @@ import copy
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
+import collections
 import time
 
 HOST = ''  # Symbolic name meaning all available interfaces
@@ -51,7 +52,7 @@ class Package:
 
     def read_data_as_sync(self, data_type, data_type_size, channel):
         num_of_samples = struct.unpack('i', self.data[0:4])[0]
-        #print(f'{num_of_samples} {data_type} {data_type_size}')
+        # print(f'{num_of_samples} {data_type} {data_type_size}')
         result = [struct.unpack(data_type, self.data[i + 4: i + 4 + data_type_size])[0] for i in
                   range(0, num_of_samples * data_type_size, data_type_size)]
         self.data = self.data[4 + num_of_samples * data_type_size:]
@@ -102,6 +103,8 @@ class MyThread(threading.Thread):
         self.list_of_used_ch = list_of_used_ch
         self.buffer_data = b''
         self.channel_data = []
+        self.state_ch1 = collections.deque(maxlen=320)
+        self.state_ch2 = collections.deque(maxlen=320)
 
     def run(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -155,9 +158,14 @@ class MyThread(threading.Thread):
                                                                                                                 num=len(self.channel_data))))[-MAX_SYNC_SAMPLES:]
 
                         self.list_of_used_ch[i].number_of_added_samples = self.list_of_used_ch[i].number_of_added_samples + len(self.channel_data)
-                        # self.channel_data = np.array(self.channel_data)
-                        self.channel_data = (np.array(self.channel_data) - 17820000)/750000
-                        print(self.channel_data)
+
+                        if i == 0:
+                            # self.channel_data = ((np.array(self.channel_data[-32:]) * 10 ** 38))
+                            self.state_ch1.extend(self.channel_data)
+                        if i == 1:
+                            # self.channel_data = (np.array(self.channel_data[-32:])) / 200000 - 133.7
+                            self.state_ch2.extend(self.channel_data)
+
                         # self.channel_data = np.array(self.channel_data).mean()
 
 
