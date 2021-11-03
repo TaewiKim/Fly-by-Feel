@@ -107,8 +107,14 @@ class MyThread(threading.Thread):
         self.list_of_used_ch = list_of_used_ch
         self.buffer_data = b''
         self.time = time.time()
-        self.state = collections.deque(maxlen=320)
-
+        self.time_sync = 0
+        self.state = [0, 0]
+        self.angle = [0, 0, 0]
+        self.rightWing = collections.deque(maxlen=320)
+        self.leftWing = collections.deque(maxlen=320)
+        self.angle_1 = collections.deque(maxlen=320)
+        self.angle_2 = collections.deque(maxlen=320)
+        self.angle_3 = collections.deque(maxlen=320)
 
     def run(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -178,18 +184,28 @@ class MyThread(threading.Thread):
                         self.list_of_used_ch[i].number_of_added_samples = self.list_of_used_ch[
                                                                               i].number_of_added_samples + len(
                             channel_data)
-                        # print(len(channel_data), time.time() - self.time, channel_data)
-                        # self.channel_data = (np.array(channel_data[-32:]) * 10 ** 38)*10-73.8
-                        # self.channel_data = (np.array(channel_data[-32:])) / 200000 - 133.7
+
+                        self.time_sync = time.time() - self.time
+
+                        if i == 0:
+                            self.rightWing.extend(channel_data)
+                            self.state[0] = self.rightWing
+
                         if i == 1:
-                            self.state.extend(channel_data)
-                        # print(self.channel_data)
+                            self.leftWing.extend(channel_data)
+                            self.state[1] = self.leftWing
+
+                        if i == 2:
+                            self.angle_1.extend(channel_data)
+                            self.angle[0] = self.angle_1
+
+                        if i == 3:
+                            self.angle_2.extend(channel_data)
+                            self.angle[1] = self.angle_2
+
+                        if i == 4:
+                            self.angle_3.extend(channel_data)
+                            self.angle[2] = self.angle_3
 
 
-                        # if len(channel_data) > 32:
-                        #     self.channel_data = np.array(channel_data[-32:])
-                        # elif len(channel_data) == 32:
-                        #     self.channel_data = np.array(channel_data)
-                        # else:
-                        #     raise "error sese"
         s.close()

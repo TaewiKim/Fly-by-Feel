@@ -77,7 +77,7 @@ def main(config):
         while not done:
             t1 = time.time()
             s, r, done = env.get_current_state()
-            a, _ = pi(torch.from_numpy(s).float().unsqueeze(1))
+            a, _ = pi(torch.from_numpy(s).float().unsqueeze(0))
             a_np = a.detach().numpy()
             a_np = a_np[0]
             # a_np = [-1., -1.] # equal to 0 power
@@ -98,7 +98,7 @@ def main(config):
             loop_t += t2
 
             if config["print_mode"]:
-                data_log.append([i, step, time.time()-init_t, env.cur_angle, ((a_flap+1)/2.0 * 150 + 100)[0][0]])
+                data_log.append([i, step, time.time()-init_t, env.distance, env.reward])
 
 
             if t2 < config["decision_period"]:
@@ -106,6 +106,7 @@ def main(config):
 
         train_t = 0.0
         env.stop_drone()
+
         if memory.size() > config["train_start_buffer_size"]:
             train_t_lst, loss_lst = [], []
             for i in range(20):
@@ -161,7 +162,7 @@ if __name__ == "__main__":
         "model_save_interval" : 30,
         "max_episode_len" : 300, # 0.05*300 = 15 sec
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
-        "target_angle": 60,  # When target_angle > 50, function become linear
+        "target_position": [50, 0, 0],
         "print_mode": False,
         "trained_model_path": None,
         # "trained_model_path" : "logs/[09-28]09.05.04/sac_model_9560.tar"
