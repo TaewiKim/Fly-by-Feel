@@ -18,7 +18,6 @@ class Environment:
         self.warning_count = 0
         self.angle_sum = 0
         self.cur_angle = 0
-        self.Drone_position = [0, 0, 0]
         self.distance = 0
         self.reward = 0
         if config["is_discrete"]:
@@ -41,7 +40,7 @@ class Environment:
     def get_current_state(self):
         input_state = self.dw_thread.state
 
-        reward, done, distance = self.calc_reward_done()
+        reward, done, distance, Drone_position = self.calc_reward_done()
         self.max_angle = max(self.max_angle, distance)
         self.min_angle = min(self.min_angle, distance)
         self.distance_sum += distance
@@ -52,7 +51,7 @@ class Environment:
         self.max_s = max(self.max_s, np.max(input_state))
         self.min_s = min(self.min_s, np.min(input_state))
 
-        return np.array(input_state), reward, done
+        return np.array(input_state), reward, done, Drone_position
 
 
     def step(self, actions):
@@ -84,15 +83,9 @@ class Environment:
             self.action_count += 1
 
         else:
-            action_flap = ((a_flap+1)/2.0) * 140 + 110  # action : real number between -1 ~ 1
-            action_str = "S" + str(int(action_flap)) + "%"
-            self.serial_channel.serialConnection.write(action_str.encode())
-
-            action_tail = (a_tail) * 180  # action : real number between -1 ~ 1
-            if abs(action_tail) < 100:
-                action_str = "T0%"
-            else:
-                action_str = "T" + str(int(action_flap)) + "%"
+            action_flap = ((a_flap + 1) / 2.0) * 250  # action : real number between -1 ~ 1, left wing
+            action_tail = ((a_tail + 1) / 2.0) * 250  # right wing
+            action_str = "S" + str(int(action_flap)) + "%" + "T" + str(int(action_tail)) + "%"
             self.serial_channel.serialConnection.write(action_str.encode())
 
 
@@ -109,7 +102,7 @@ class Environment:
         theta_3 = math.radians(angle_3)
 
         Px_drone = L3*(math.sin(theta_1)*math.cos(theta_2)*math.sin(theta_3)+math.cos(theta_1)*math.cos(theta_3))+L4*math.sin(theta_1)*math.sin(theta_2)-L2*math.sin(theta_1)*math.cos(theta_2)+Px
-        Py_drone = L3*(math.cos(theta_1)*math.cos(theta_2)*math.sin(theta_3)+math.sin(theta_1)*math.cos(theta_3))+L4*math.cos(theta_1)*math.sin(theta_2)-L2*math.cos(theta_1)*math.cos(theta_2)+Py
+        Py_drone = L3*(math.cos(theta_1)*math.cos(theta_2)*math.sin(theta_3)-math.sin(theta_1)*math.cos(theta_3))+L4*math.cos(theta_1)*math.sin(theta_2)-L2*math.cos(theta_1)*math.cos(theta_2)+Py
         Pz_drone = L3*(math.sin(theta_2)*math.sin(theta_3))-L4*math.cos(theta_2)-L2*math.sin(theta_2)+Pz-L1
 
         Drone_position = [Px_drone, Py_drone, Pz_drone]
@@ -119,26 +112,31 @@ class Environment:
 
     def calc_reward_done(self):
         done = False
-        angle = copy.deepcopy(self.dw_thread.angle)
-        angle_1 = angle[0][-1]
-        angle_2 = angle[1][-1]
-        angle_3 = angle[2][-1]
-        self.Drone_position = self.forward_kinematics(angle_1, angle_2, angle_3)
-        # print(self.Drone_position)
+        # angle = copy.deepcopy(self.dw_thread.angle)
+        # angle_1 = angle[0][-1]
+        # angle_2 = angle[1][-1]
+        # angle_3 = angle[2][-1]
+        # Drone_position = self.forward_kinematics(angle_1, angle_2, angle_3)
 
-        self.distance = math.sqrt((self.Drone_position[0]-self.target_position[0])**2 + (self.Drone_position[1]-self.target_position[1])**2 + (self.Drone_position[2]-self.target_position[2])**2)
+        Drone_position = copy.deepcopy(self.dw_thread.drone_position)
+        Drone_position = [Drone_position[0][-1],Drone_position[1][-1],Drone_position[2][-1]]
+        # print(Drone_position)
 
-        mu = self.target_position
-        cov = [[5000, 0, 0], [0, 5000, 0], [0, 0, 10000]]
-        rv = multivariate_normal(mu, cov)
+        distance = math.sqrt((Drone_position[0]-self.target_position[0])**2 + (Drone_position[1]-self.target_position[1])**2 + (Drone_position[2]-self.target_position[2])**2)
+        # print(self.distance)
+        # mu = self.target_position
+        # cov = [[100000, 0, 0], [0, 50000, 0], [0, 0, 100000]]
+        # rv = multivariate_normal(mu, cov)
+        # reward = rv.pdf(Drone_position)*10**7
 
-        self.reward = rv.pdf(self.Drone_position)*10**6*5
+        reward = (500 - abs(self.target_position[0] - Drone_position[0]))/3000 + (100 - abs(self.target_position[1] - Drone_position[1]))/2000
+        # reward = (100 - abs(self.target_position[1] - Drone_position[1])) / 1000
         # print(self.reward)
 
         if self.step_count >= self.config["max_episode_len"]:
             done = True
 
-        return self.reward, done, self.distance
+        return reward, done, distance, Drone_position
 
 
     def stop_drone(self):

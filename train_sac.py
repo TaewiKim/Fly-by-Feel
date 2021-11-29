@@ -60,6 +60,7 @@ def main(config):
     memory = ReplayBuffer(config["buffer_limit"])
 
     time.sleep(2) # for waiting dw thread to be ready
+    env.serial_channel.serialConnection.write("F250%".encode())
 
     score = 0.0
     avg_loss = 0.0
@@ -69,14 +70,14 @@ def main(config):
         env.reset()
         done = False
         step = 0
-        data_log = [['epi', 'step', 'time', 'angle', 'action']]
+        data_log = [['epi', 'step', 'time', 'position', 'action', 'reward']]
         loop_t = 0.0
         prev_s, prev_a = None, None
         init_t = time.time()
 
         while not done:
             t1 = time.time()
-            s, r, done = env.get_current_state()
+            s, r, done, drone_position = env.get_current_state()
             a, _ = pi(torch.from_numpy(s).float().unsqueeze(0))
             a_np = a.detach().numpy()
             a_np = a_np[0]
@@ -98,7 +99,7 @@ def main(config):
             loop_t += t2
 
             if config["print_mode"]:
-                data_log.append([i, step, time.time()-init_t, env.distance, env.reward])
+                data_log.append([i, step, time.time()-init_t, drone_position, a_np, r])
 
 
             if t2 < config["decision_period"]:
@@ -142,29 +143,30 @@ def main(config):
         n_epi += 1
 
     env.stop_drone()
+    env.serial_channel.serialConnection.write("F0%".encode())
 
 if __name__ == "__main__":
     config = {
         "is_discrete": False,
-        "buffer_limit" : 3000,  #3000
+        "buffer_limit" : 10000,  #5000
         "gamma" : 0.98,
-        "lr_pi" : 0.0005,
-        "lr_q": 0.001,
-        "init_alpha"  : 0.01,
+        "lr_pi" : 0.0001, #0.0005
+        "lr_q": 0.0001, #0.001
+        "init_alpha"  : 0.002, #0.01
         "print_interval" : 1,
         "target_update_interval": 3,
         "tau" : 0.01,
         "target_entropy" : -1.0,
-        "lr_alpha" : 0.001,
+        "lr_alpha" : 0.0001, #0.001
         "batch_size" : 32,
         "train_start_buffer_size" : 1000,  #1000
         "decision_period" : 0.05,
         "model_save_interval" : 30,
         "max_episode_len" : 300, # 0.05*300 = 15 sec
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
-        "target_position": [50, 0, 0],
-        "print_mode": False,
-        "trained_model_path": None,
-        # "trained_model_path" : "logs/[09-28]09.05.04/sac_model_9560.tar"
+        "target_position": [100, 0, 0],
+        "print_mode": True,
+        # "trained_model_path": None,
+        "trained_model_path" : "logs/[11-27]20.24.38/sac_model_23960.tar"
     }
     main(config)
