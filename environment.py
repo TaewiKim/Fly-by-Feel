@@ -18,7 +18,8 @@ class Environment:
         self.warning_count = 0
         self.angle_sum = 0
         self.cur_angle = 0
-        self.distance = 0
+        self.distance = []
+        self.x_lst, self.y_lst, self.z_lst = [], [], []
         self.reward = 0
         if config["is_discrete"]:
             self.action_count = np.zeros(config["n_action"])
@@ -31,7 +32,8 @@ class Environment:
         self.warning_count = 0
         if self.is_discrete:
             self.action_count = np.zeros(self.config["n_action"])
-        self.distance_sum = 0
+        self.distance = []
+        self.x_lst, self.y_lst, self.z_lst = [], [], []
         self.cur_angle = 0
         self.max_angle, self.min_angle = -100000.0, 1000000.0
         self.max_s, self.min_s = -100000.0, 1000000.0
@@ -43,7 +45,12 @@ class Environment:
         reward, done, distance, Drone_position = self.calc_reward_done()
         self.max_angle = max(self.max_angle, distance)
         self.min_angle = min(self.min_angle, distance)
-        self.distance_sum += distance
+
+        self.distance.append(distance)
+        self.x_lst.append(Drone_position[0])
+        self.y_lst.append(Drone_position[1])
+        self.z_lst.append(Drone_position[2])
+
         if done:
             self.stop_drone()
 
