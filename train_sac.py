@@ -60,7 +60,8 @@ def main(config):
     memory = ReplayBuffer(config["buffer_limit"])
 
     time.sleep(2) # for waiting dw thread to be ready
-    env.serial_channel.serialConnection.write("F250%".encode())
+    # Fan_str = "F"+"Fan_power"+"%"
+    # env.serial_channel.serialConnection.write(Fan_str.encode())
 
     score = 0.0
     avg_loss = 0.0
@@ -138,6 +139,7 @@ def main(config):
             df.to_csv(path+'/'+ datetime.now().strftime("[%m-%d]%H.%M.%S")+"_epi_{}".format(n_epi)+'.csv')
 
         env.stop_drone()
+        # env.serial_channel.serialConnection.write("Fan_power".encode())
         time.sleep(3)
         score = 0.0
         n_epi += 1
@@ -162,11 +164,12 @@ if __name__ == "__main__":
         "train_start_buffer_size" : 1000,  #1000
         "decision_period" : 0.05,
         "model_save_interval" : 30,
-        "max_episode_len" : 300, # 0.05*300 = 15 sec
+        "max_episode_len" : 400, # 0.05*400 = 20 sec
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
-        "target_position": [100, 0, 0],
-        "print_mode": True,
-        # "trained_model_path": None,
-        "trained_model_path" : "logs/[11-27]20.24.38/sac_model_23960.tar"
+        "target_position": [0, 0],
+        "print_mode": False,
+        "Fan_power": 200,
+        "trained_model_path": None,
+        # "trained_model_path" : "logs/[12-08]21.56.59/sac_model_19760.tar"
     }
     main(config)

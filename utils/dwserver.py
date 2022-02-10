@@ -108,13 +108,13 @@ class MyThread(threading.Thread):
         self.buffer_data = b''
         self.time = time.time()
         self.time_sync = 0
-        self.state = [0, 0]
+        self.state = [0, 0, 0, 0]
         self.drone_position = [0, 0, 0]
-        self.rightWing = collections.deque(maxlen=320)
-        self.leftWing = collections.deque(maxlen=320)
-        self.dx = collections.deque(maxlen=320)
-        self.dy = collections.deque(maxlen=320)
-        self.dz = collections.deque(maxlen=320)
+        self.rightWing = collections.deque(maxlen=640)
+        self.leftWing = collections.deque(maxlen=640)
+        self.dx = collections.deque(maxlen=640)
+        self.dy = collections.deque(maxlen=640)
+        self.dz = collections.deque(maxlen=640)
 
     def run(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -197,15 +197,17 @@ class MyThread(threading.Thread):
 
                         if i == 2:
                             self.dx.extend(channel_data)
-                            self.drone_position[0] = self.dx
+                            self.state[2] = self.dx
+                            self.drone_position[0] = self.dx[-1]*1000
 
                         if i == 3:
                             self.dy.extend(channel_data)
-                            self.drone_position[1] = self.dy
+                            self.state[3] = self.dy
+                            self.drone_position[1] = self.dy[-1]*1000
 
                         if i == 4:
                             self.dz.extend(channel_data)
-                            self.drone_position[2] = self.dz
+                            self.drone_position[2] = self.dz[-1]*1000
 
 
         s.close()
