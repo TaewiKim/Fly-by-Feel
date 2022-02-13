@@ -108,13 +108,11 @@ class MyThread(threading.Thread):
         self.buffer_data = b''
         self.time = time.time()
         self.time_sync = 0
-        self.state = [0, 0, 0, 0]
-        self.drone_position = [0, 0, 0]
+        self.state = [0, 0]
+        self.drone_angle = [0]
         self.rightWing = collections.deque(maxlen=640)
         self.leftWing = collections.deque(maxlen=640)
-        self.dx = collections.deque(maxlen=640)
-        self.dy = collections.deque(maxlen=640)
-        self.dz = collections.deque(maxlen=640)
+        self.angle = collections.deque(maxlen=640)
 
     def run(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -187,27 +185,20 @@ class MyThread(threading.Thread):
 
                         self.time_sync = time.time() - self.time
 
-                        if i == 0:
+                        if i == 1:
                             self.rightWing.extend(channel_data)
                             self.state[0] = self.rightWing
-
-                        if i == 1:
-                            self.leftWing.extend(channel_data)
-                            self.state[1] = self.leftWing
+                            # print(self.state[0])
 
                         if i == 2:
-                            self.dx.extend(channel_data)
-                            self.state[2] = self.dx
-                            self.drone_position[0] = self.dx[-1]*1000
+                            self.leftWing.extend(channel_data)
+                            self.state[1] = self.leftWing
+                            # print(self.state[1])
 
-                        if i == 3:
-                            self.dy.extend(channel_data)
-                            self.state[3] = self.dy
-                            self.drone_position[1] = self.dy[-1]*1000
-
-                        if i == 4:
-                            self.dz.extend(channel_data)
-                            self.drone_position[2] = self.dz[-1]*1000
+                        if i == 0:
+                            self.angle.extend(channel_data)
+                            self.drone_angle[0] = self.angle[-1]
+                            # print(self.drone_angle[0])
 
 
         s.close()

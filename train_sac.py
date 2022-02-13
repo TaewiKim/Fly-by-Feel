@@ -59,15 +59,16 @@ def main(config):
 
     memory = ReplayBuffer(config["buffer_limit"])
 
-    time.sleep(2) # for waiting dw thread to be ready
-    # Fan_str = "F"+"Fan_power"+"%"
-    # env.serial_channel.serialConnection.write(Fan_str.encode())
+    time.sleep(5) # for waiting dw thread to be ready
+
+    Fan_str = "F" + str(config["Fan_power"]) + "%"
+    env.serial_channel.serialConnection.write(Fan_str.encode())
 
     score = 0.0
     avg_loss = 0.0
     n_epi = 0
 
-    for i in range(2000):
+    for i in range(500):
         env.reset()
         done = False
         step = 0
@@ -130,9 +131,9 @@ def main(config):
         if n_epi % config["model_save_interval"] == 0:
             save_model(config, q1, q2, pi, n_epi)
 
-        if n_epi % 30 == 0 and n_epi != 0:
-            env.stop_drone()
-            time.sleep(60)
+        # if n_epi % 30 == 0 and n_epi != 0:
+        #     env.stop_drone()
+        #     time.sleep(60)
 
         if config["print_mode"]:
             df = pd.DataFrame(data_log)
@@ -149,7 +150,6 @@ def main(config):
 
 if __name__ == "__main__":
     config = {
-        "is_discrete": False,
         "buffer_limit" : 10000,  #5000
         "gamma" : 0.98,
         "lr_pi" : 0.0001, #0.0005
@@ -164,11 +164,11 @@ if __name__ == "__main__":
         "train_start_buffer_size" : 1000,  #1000
         "decision_period" : 0.05,
         "model_save_interval" : 30,
-        "max_episode_len" : 400, # 0.05*400 = 20 sec
+        "max_episode_len" : 200, # 0.05*200 = 10 sec
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
-        "target_position": [0, 0],
+        "target_position": 180,
         "print_mode": False,
-        "Fan_power": 200,
+        "Fan_power": 250,
         "trained_model_path": None,
         # "trained_model_path" : "logs/[12-08]21.56.59/sac_model_19760.tar"
     }
