@@ -16,7 +16,7 @@ class Environment:
         self.step_count = 0
         self.angle_sum = 0
         self.cur_angle = 0
-        self.Drone_position = []
+        self.Drone_position = 0
         self.init_angle = 0
 
 
@@ -47,8 +47,9 @@ class Environment:
     def step(self, actions):
         a_flap = actions   # a_flap : -1 ~ 1
         self.step_count += 1
-        action_flap = ((a_flap + 1) / 2.0) * 250 # action : real number between 0 ~ 250, motor power
-
+        action_flap = ((a_flap + 1) / 2.0) * 150 + 100  # action : real number between 0 ~ 250, motor power
+        if action_flap < 110:
+            action_flap = 0
         action_str = "T" + str(int(action_flap)) + "%"
         self.serial_channel.serialConnection.write(action_str.encode())
 
@@ -57,8 +58,12 @@ class Environment:
         done = False
         Drone_angle = copy.deepcopy(self.dw_thread.drone_angle)
         Drone_position = self.init_angle + Drone_angle[0]
+        # print(Drone_position)
 
-        reward = (160-abs(Drone_position - self.target_position))/2000
+        if Drone_position > 270:
+            reward = - abs(self.target_position - Drone_position) / 2000
+        else:
+            reward = (180 - abs(self.target_position - Drone_position)) / 2000
         # print(reward)
 
         if self.step_count >= self.config["max_episode_len"]:

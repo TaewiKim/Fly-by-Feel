@@ -5,13 +5,15 @@ from models.sac_model import PolicyNet, QNet, calc_target
 import torch
 from replayBuffer import ReplayBuffer
 import time, os
-import pylab
+import sys
 from tensorboardX import SummaryWriter
 from datetime import datetime, timedelta
 from utils.util import save_config, save_sac_model as save_model, write_summary
 import numpy as np
 import pandas as pd
 
+np.set_printoptions(threshold=sys.maxsize)
+np.set_printoptions(linewidth=np.inf)
 
 def main(config):
     np.set_printoptions(precision=3)
@@ -68,7 +70,7 @@ def main(config):
     avg_loss = 0.0
     n_epi = 0
 
-    for i in range(500):
+    for i in range(2000):
         env.reset()
         done = False
         step = 0
@@ -131,9 +133,9 @@ def main(config):
         if n_epi % config["model_save_interval"] == 0:
             save_model(config, q1, q2, pi, n_epi)
 
-        # if n_epi % 30 == 0 and n_epi != 0:
-        #     env.stop_drone()
-        #     time.sleep(60)
+        if n_epi % 30 == 0 and n_epi != 0:
+            env.stop_drone()
+            time.sleep(60)
 
         if config["print_mode"]:
             df = pd.DataFrame(data_log)
@@ -146,7 +148,7 @@ def main(config):
         n_epi += 1
 
     env.stop_drone()
-    env.serial_channel.serialConnection.write("F0%".encode())
+    # env.serial_channel.serialConnection.write("F0%".encode())
 
 if __name__ == "__main__":
     config = {
@@ -164,12 +166,12 @@ if __name__ == "__main__":
         "train_start_buffer_size" : 1000,  #1000
         "decision_period" : 0.05,
         "model_save_interval" : 30,
-        "max_episode_len" : 200, # 0.05*200 = 10 sec
+        "max_episode_len" : 200, # 0.03*400 = 12 sec
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
         "target_position": 180,
         "print_mode": False,
-        "Fan_power": 250,
+        "Fan_power": 220,
         "trained_model_path": None,
-        # "trained_model_path" : "logs/[12-08]21.56.59/sac_model_19760.tar"
+        # "trained_model_path" : "logs/[02-13]19.35.19/sac_model_24520.tar"
     }
     main(config)

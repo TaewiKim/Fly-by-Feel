@@ -110,9 +110,9 @@ class MyThread(threading.Thread):
         self.time_sync = 0
         self.state = [0, 0]
         self.drone_angle = [0]
-        self.rightWing = collections.deque(maxlen=640)
-        self.leftWing = collections.deque(maxlen=640)
-        self.angle = collections.deque(maxlen=640)
+        self.rightWing = collections.deque(maxlen=320)
+        self.leftWing = collections.deque(maxlen=320)
+        # self.angle = collections.deque(maxlen=640)
 
     def run(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -196,8 +196,8 @@ class MyThread(threading.Thread):
                             # print(self.state[1])
 
                         if i == 0:
-                            self.angle.extend(channel_data)
-                            self.drone_angle[0] = self.angle[-1]
+                            # self.angle.extend(channel_data)
+                            self.drone_angle[0] = channel_data[-1]
                             # print(self.drone_angle[0])
 
 
