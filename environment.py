@@ -19,6 +19,14 @@ class Environment:
         self.Drone_position = 0
         self.init_angle = 0
 
+        self.n_state = 30
+
+        self.action_queue = deque(maxlen=self.n_state)
+
+    def init_action_queue(self):
+        for i in range(self.n_state):
+            self.action_queue.append(0.0)
+
 
     def reset(self):
         self.stop_drone()
@@ -26,10 +34,12 @@ class Environment:
         self.cur_angle = 0
         self.max_angle, self.min_angle = -100000.0, 1000000.0
         self.max_s, self.min_s = -100000.0, 1000000.0
+        self.init_action_queue()
 
 
     def get_current_state(self):
         input_state = self.dw_thread.state
+        action_state = np.array(self.action_queue)
 
         reward, done, Drone_position = self.calc_reward_done()
         self.max_angle = max(self.max_angle, Drone_position)
@@ -43,7 +53,9 @@ class Environment:
         self.max_s = max(self.max_s, np.max(input_state))
         self.min_s = min(self.min_s, np.min(input_state))
 
-        return np.array(input_state), reward, done, Drone_position
+        fin_state = np.concatenate((np.array(input_state), action_state), dim=0)
+
+        return fin_state, reward, done, Drone_position
 
 
     def step(self, actions):
@@ -54,6 +66,7 @@ class Environment:
             action_flap = 0
         action_str = "T" + str(int(action_flap)) + "%"
         self.serial_channel.serialConnection.write(action_str.encode())
+        self.action_queue.append(actions)
 
 
     def calc_reward_done(self):
