@@ -34,9 +34,11 @@ class Environment:
         reward, done, Drone_position = self.calc_reward_done()
         self.max_angle = max(self.max_angle, Drone_position)
         self.min_angle = min(self.min_angle, Drone_position)
+        self.angle_sum += Drone_position
 
         if done:
             self.stop_drone()
+            self.angle_sum = 0
 
         self.max_s = max(self.max_s, np.max(input_state))
         self.min_s = min(self.min_s, np.min(input_state))
@@ -47,8 +49,8 @@ class Environment:
     def step(self, actions):
         a_flap = actions   # a_flap : -1 ~ 1
         self.step_count += 1
-        action_flap = ((a_flap + 1) / 2.0) * 150 + 100  # action : real number between 0 ~ 250, motor power
-        if action_flap < 110:
+        action_flap = ((a_flap + 1) / 2.0) * 200 + 50  # action : real number between 0 ~ 250, motor power
+        if action_flap < 55:
             action_flap = 0
         action_str = "T" + str(int(action_flap)) + "%"
         self.serial_channel.serialConnection.write(action_str.encode())
@@ -60,10 +62,11 @@ class Environment:
         Drone_position = self.init_angle + Drone_angle[0]
         # print(Drone_position)
 
-        if Drone_position > 270:
-            reward = - abs(self.target_position - Drone_position) / 2000
-        else:
-            reward = (180 - abs(self.target_position - Drone_position)) / 2000
+        # if Drone_position > self.target_position + 90:
+        #     reward = - abs(self.target_position + 90 - Drone_position) / 2000
+        # else:
+        #     reward = (90 - abs(self.target_position - Drone_position)) / 2000
+        reward = (self.target_position - abs(self.target_position - Drone_position)) / 1000
         # print(reward)
 
         if self.step_count >= self.config["max_episode_len"]:

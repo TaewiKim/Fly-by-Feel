@@ -69,6 +69,7 @@ def main(config):
     score = 0.0
     avg_loss = 0.0
     n_epi = 0
+    action_sum = 0
 
     for i in range(2000):
         env.reset()
@@ -88,9 +89,10 @@ def main(config):
             # a_np = [-1., -1.] # equal to 0 power
             env.step(a_np)
 
+            action_sum += a_np
             done_mask = 0.0 if done else 1.0
             if prev_s is not None:
-                memory.put((prev_s, a_np, r, s, done_mask))
+                memory.put((prev_s, prev_a, r, s, done_mask))
             prev_s, prev_a = s, a_np
 
             step += 1
@@ -127,7 +129,7 @@ def main(config):
                 train_t_lst.append(time.time()-t1)
                 loss_lst.append(loss1)
 
-            write_summary(writer, config, n_epi, score, pi.optimization_step, np.mean(loss_lst), 0.0, env, loop_t/float(step), np.mean(train_t_lst), pi.log_alpha.exp().item())
+            write_summary(writer, config, n_epi, score, pi.optimization_step, np.mean(loss_lst), 0.0, env, loop_t/float(step), np.mean(train_t_lst), pi.log_alpha.exp().item(), action_sum)
 
 
         if n_epi % config["model_save_interval"] == 0:
@@ -146,31 +148,32 @@ def main(config):
         time.sleep(3)
         score = 0.0
         n_epi += 1
+        action_sum = 0
 
     env.stop_drone()
     # env.serial_channel.serialConnection.write("F0%".encode())
 
 if __name__ == "__main__":
     config = {
-        "buffer_limit" : 10000,  #5000
+        "buffer_limit" : 30000,  #10000
         "gamma" : 0.98,
         "lr_pi" : 0.0001, #0.0005
-        "lr_q": 0.0001, #0.001
-        "init_alpha"  : 0.002, #0.01
+        "lr_q": 0.0001, #0.0001
+        "init_alpha"  : 0.0001, #0.002
         "print_interval" : 1,
         "target_update_interval": 3,
-        "tau" : 0.01,
+        "tau" : 0.001,
         "target_entropy" : -1.0,
-        "lr_alpha" : 0.0001, #0.001
-        "batch_size" : 32,
-        "train_start_buffer_size" : 1000,  #1000
+        "lr_alpha" : 0.0001, #0.0001
+        "batch_size" : 128, #32
+        "train_start_buffer_size" : 5000,  #1000
         "decision_period" : 0.05,
         "model_save_interval" : 30,
-        "max_episode_len" : 200, # 0.03*400 = 12 sec
+        "max_episode_len" : 200, # 0.05*200 = 10.05 sec
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
         "target_position": 180,
         "print_mode": False,
-        "Fan_power": 220,
+        "Fan_power": 250,
         "trained_model_path": None,
         # "trained_model_path" : "logs/[02-13]19.35.19/sac_model_24520.tar"
     }
