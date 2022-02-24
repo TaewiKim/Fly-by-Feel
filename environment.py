@@ -19,7 +19,7 @@ class Environment:
         self.Drone_position = 0
         self.init_angle = 0
 
-        self.n_state = 30
+        self.n_state = 256
 
         self.action_queue = deque(maxlen=self.n_state)
 
@@ -39,7 +39,9 @@ class Environment:
 
     def get_current_state(self):
         input_state = self.dw_thread.state
-        action_state = np.array(self.action_queue)
+        action_state = np.array([self.action_queue])
+        # print(action_state)
+        # print(action_state.dtype)
 
         reward, done, Drone_position = self.calc_reward_done()
         self.max_angle = max(self.max_angle, Drone_position)
@@ -53,20 +55,21 @@ class Environment:
         self.max_s = max(self.max_s, np.max(input_state))
         self.min_s = min(self.min_s, np.min(input_state))
 
-        fin_state = np.concatenate((np.array(input_state), action_state), dim=0)
+        fin_state = np.concatenate((np.array(input_state), action_state), axis=0)
 
         return fin_state, reward, done, Drone_position
 
 
     def step(self, actions):
-        a_flap = actions   # a_flap : -1 ~ 1
+        a_flap = actions[0]   # a_flap : -1 ~ 1
         self.step_count += 1
         action_flap = ((a_flap + 1) / 2.0) * 200 + 50  # action : real number between 0 ~ 250, motor power
         if action_flap < 55:
             action_flap = 0
         action_str = "T" + str(int(action_flap)) + "%"
         self.serial_channel.serialConnection.write(action_str.encode())
-        self.action_queue.append(actions)
+        for i in range(int(1280 * self.config["decision_period"])):
+            self.action_queue.append(a_flap)
 
 
     def calc_reward_done(self):
@@ -79,7 +82,7 @@ class Environment:
         #     reward = - abs(self.target_position + 90 - Drone_position) / 2000
         # else:
         #     reward = (90 - abs(self.target_position - Drone_position)) / 2000
-        reward = (self.target_position - abs(self.target_position - Drone_position)) / 1000
+        reward = (self.target_position - abs(self.target_position - Drone_position)) / 2000
         # print(reward)
 
         if self.step_count >= self.config["max_episode_len"]:

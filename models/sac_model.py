@@ -14,7 +14,7 @@ class PolicyNet(nn.Module):
         self.conv2 = nn.Conv1d(32, 32, 5)
         self.pool2 = nn.MaxPool1d(2)
 
-        self.fc1 = nn.Linear(29 * 32, 256)
+        self.fc1 = nn.Linear(61 * 32, 256)
         self.fc_mu = nn.Linear(256, 1)
         self.fc_std  = nn.Linear(256, 1)
         self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
@@ -30,7 +30,7 @@ class PolicyNet(nn.Module):
         x = self.pool1(F.relu(self.conv1(x)))
         x = self.pool2(F.relu(self.conv2(x)))
 
-        x = x.reshape(-1, 29 * 32)
+        x = x.reshape(-1, 61 * 32)
         x = F.relu(self.fc1(x))
 
         mu = self.fc_mu(x)
@@ -70,12 +70,12 @@ class QNet(nn.Module):
     def __init__(self, learning_rate, tau):
         super(QNet, self).__init__()
         self.tau = tau
-        self.conv1 = nn.Conv1d(2, 32, 5)
+        self.conv1 = nn.Conv1d(3, 32, 5)
         self.pool1 = nn.MaxPool1d(2)
         self.conv2 = nn.Conv1d(32, 32, 5)
         self.pool2 = nn.MaxPool1d(2)
 
-        self.fc1 = nn.Linear(29 * 32, 128)
+        self.fc1 = nn.Linear(61 * 32, 128)
         self.fc_a = nn.Linear(1, 64)
         self.fc_a2 = nn.Linear(64, 64)
         self.fc_cat1 = nn.Linear(128+64, 128)
@@ -87,7 +87,7 @@ class QNet(nn.Module):
         x = self.pool1(F.relu(self.conv1(x)))
         x = self.pool2(F.relu(self.conv2(x)))
 
-        x = x.reshape(-1, 29 * 32)
+        x = x.reshape(-1, 61 * 32)
         h1 = F.relu(self.fc1(x))
         h2 = F.relu(self.fc_a(a))
         h2 = F.relu(self.fc_a2(h2))

@@ -92,7 +92,7 @@ def main(config):
             action_sum += a_np
             done_mask = 0.0 if done else 1.0
             if prev_s is not None:
-                memory.put((prev_s, prev_a, r, s, done_mask))
+                memory.put((prev_s, a_np, r, s, done_mask))
             prev_s, prev_a = s, a_np
 
             step += 1
@@ -169,7 +169,7 @@ if __name__ == "__main__":
         "train_start_buffer_size" : 5000,  #1000
         "decision_period" : 0.05,
         "model_save_interval" : 30,
-        "max_episode_len" : 200, # 0.05*200 = 10.05 sec
+        "max_episode_len" : 200, # 0.05*200 = 10 sec
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
         "target_position": 180,
         "print_mode": False,
