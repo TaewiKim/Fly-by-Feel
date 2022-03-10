@@ -108,12 +108,12 @@ class MyThread(threading.Thread):
         self.buffer_data = b''
         self.time = time.time()
         self.time_sync = 0
-        self.state = [0, 0]
+        self.state = [0, 0, 0, 0]
         self.drone_angle = [0]
         self.rightWing = collections.deque(maxlen=256)
         self.leftWing = collections.deque(maxlen=256)
-        # self.rightWing_AVE = collections.deque(maxlen=128)
-        # self.leftwing_AVE = collections.deque(maxlen=128)
+        self.rightWing_QRMS = collections.deque(maxlen=256)
+        self.leftwing_QRMS = collections.deque(maxlen=256)
         # self.angle = collections.deque(maxlen=640)
 
     def run(self):
@@ -187,27 +187,27 @@ class MyThread(threading.Thread):
 
                         self.time_sync = time.time() - self.time
 
-                        if i == 0:
+                        if i == 1:
                             self.rightWing.extend(channel_data)
                             self.state[0] = self.rightWing
                             # print(self.state[0])
 
-                        if i == 1:
+                        if i == 2:
                             self.leftWing.extend(channel_data)
                             self.state[1] = self.leftWing
                             # print(self.state[1])
 
-                        if i == 2:
+                        if i == 0:
                             # self.angle.extend(channel_data)
                             self.drone_angle[0] = np.mean(channel_data)
                             # print(self.drone_angle[0])
 
-                        # if i == 3:
-                        #     self.rightWing_AVE.extend(channel_data)
-                        #     self.state[2] = self.rightWing_RMS
-                        #
-                        # if i == 4:
-                        #     self.leftwing_AVE.extend(channel_data)
-                        #     self.state[1] = self.leftwing_AVE
+                        if i == 3:
+                            self.rightWing_QRMS.extend(channel_data)
+                            self.state[2] = self.rightWing_QRMS
+
+                        if i == 4:
+                            self.leftwing_QRMS.extend(channel_data)
+                            self.state[3] = self.leftwing_QRMS
 
         s.close()

@@ -9,7 +9,7 @@ import numpy as np
 class PolicyNet(nn.Module):
     def __init__(self, learning_rate, init_alpha, lr_alpha, target_entropy):
         super(PolicyNet, self).__init__()
-        self.conv1 = nn.Conv1d(3, 32, 5)
+        self.conv1 = nn.Conv1d(5, 32, 5)
         self.pool1 = nn.MaxPool1d(2)
         self.conv2 = nn.Conv1d(32, 32, 5)
         self.pool2 = nn.MaxPool1d(2)
@@ -70,7 +70,7 @@ class QNet(nn.Module):
     def __init__(self, learning_rate, tau):
         super(QNet, self).__init__()
         self.tau = tau
-        self.conv1 = nn.Conv1d(3, 32, 5)
+        self.conv1 = nn.Conv1d(5, 32, 5)
         self.pool1 = nn.MaxPool1d(2)
         self.conv2 = nn.Conv1d(32, 32, 5)
         self.pool2 = nn.MaxPool1d(2)
