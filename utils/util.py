@@ -39,8 +39,8 @@ def save_dqn_model(config, model, n_epi):
 def write_summary(writer, config, n_epi, score, optimization_step, avg_loss, epsilon, env:Environment, avg_loop_t, train_t, alpha, action_sum):
     writer.add_scalar('agent/score', score, n_epi)
     writer.add_scalar('agent/avg_angle', env.angle_sum/float(env.step_count), n_epi)
-    writer.add_scalar('agent/max_angle', env.max_angle, n_epi)
-    writer.add_scalar('agent/min_angle', env.min_angle, n_epi)
+    writer.add_scalar('agent/max_angle', env.max_Px, n_epi)
+    writer.add_scalar('agent/min_angle', env.min_Px, n_epi)
     writer.add_scalar('agent/avg_actions', action_sum / float(env.step_count), n_epi)
 
     # writer.add_scalar('distance/min', np.min(env.distance), n_epi)

@@ -108,13 +108,11 @@ class MyThread(threading.Thread):
         self.buffer_data = b''
         self.time = time.time()
         self.time_sync = 0
-        self.state = [0, 0, 0, 0]
-        self.drone_angle = [0]
+        self.state = [0, 0]
+        self.drone_position = [0, 0]
         self.rightWing = collections.deque(maxlen=256)
         self.leftWing = collections.deque(maxlen=256)
-        self.rightWing_QRMS = collections.deque(maxlen=256)
-        self.leftwing_QRMS = collections.deque(maxlen=256)
-        # self.angle = collections.deque(maxlen=640)
+
 
     def run(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -187,27 +185,23 @@ class MyThread(threading.Thread):
 
                         self.time_sync = time.time() - self.time
 
-                        if i == 1:
+                        if i == 0:
                             self.rightWing.extend(channel_data)
                             self.state[0] = self.rightWing
                             # print(self.state[0])
 
-                        if i == 2:
+                        if i == 1:
                             self.leftWing.extend(channel_data)
                             self.state[1] = self.leftWing
                             # print(self.state[1])
 
-                        if i == 0:
-                            # self.angle.extend(channel_data)
-                            self.drone_angle[0] = np.mean(channel_data)
+                        if i == 2:
+                            self.drone_position[0] = np.mean(channel_data)
                             # print(self.drone_angle[0])
 
                         if i == 3:
-                            self.rightWing_QRMS.extend(channel_data)
-                            self.state[2] = self.rightWing_QRMS
+                            self.drone_position[1] = np.mean(channel_data)
+                            # print(self.drone_angle[0])
 
-                        if i == 4:
-                            self.leftwing_QRMS.extend(channel_data)
-                            self.state[3] = self.leftwing_QRMS
 
         s.close()

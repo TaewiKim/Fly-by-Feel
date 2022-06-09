@@ -72,7 +72,7 @@ def main(config):
     n_epi = 0
     action_sum = 0
 
-    for i in range(3000):
+    for i in range(2000):
         env.reset()
         done = False
         step = 0
@@ -88,7 +88,6 @@ def main(config):
             a, _ = pi(torch.from_numpy(s).float().unsqueeze(0))
             a_np = a.detach().numpy()
             a_np = a_np[0]
-            # a_np = [-1., -1.] # equal to 0 power
             env.step(a_np)
 
             action_sum += a_np
@@ -132,7 +131,7 @@ def main(config):
                 train_t_lst.append(time.time()-t1)
                 loss_lst.append(loss1)
 
-            write_summary(writer, config, n_epi, score, pi.optimization_step, np.mean(loss_lst), 0.0, env, loop_t/float(step), np.mean(train_t_lst), pi.log_alpha.exp().item(), action_sum)
+            write_summary(writer, config, n_epi, score, pi.optimization_step, np.mean(loss_lst), 0.0, env, loop_t/float(step), np.mean(train_t_lst), pi.log_alpha.exp().item(), action_sum[0])
 
 
         if n_epi % config["model_save_interval"] == 0:
@@ -152,7 +151,7 @@ def main(config):
             env.serial_channel.serialConnection.write(Fan_str.encode())
 
         env.stop_drone()
-        time.sleep(3)
+        time.sleep(5)
         score = 0.0
         n_epi += 1
         action_sum = 0
@@ -174,17 +173,19 @@ if __name__ == "__main__":
         "tau" : 0.001,
         "target_entropy" : -1.0,
         "lr_alpha" : 0.0001, #0.0001
-        "batch_size" : 128, #32
+        "batch_size" : 64, #32
         "train_start_buffer_size" : 1000,  #5000
         "decision_period" : 0.05,
         "model_save_interval" : 30,
-        "max_episode_len" : 200, # 0.1*100 = 10 sec
+        "max_episode_len" : 300, # 0.05*400 = 15 sec
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
         "target_position": 180,
         "print_mode": False,
-        "Fan_power": 250,
+        "Fan_power": 200,
         "Fan_rand": False,
         "trained_model_path": None,
-        # "trained_model_path" : "logs/[03-03]19.55.47/sac_model_50940.tar"
+        # "trained_model_path" : "logs/[06-09]14.16.05/sac_model_2960.tar"
     }
     main(config)
+
+
