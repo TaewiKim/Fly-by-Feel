@@ -110,8 +110,8 @@ class MyThread(threading.Thread):
         self.time_sync = 0
         self.state = [0, 0]
         self.drone_position = [0, 0]
-        self.rightWing = collections.deque(maxlen=256)
-        self.leftWing = collections.deque(maxlen=256)
+        self.rightWing = collections.deque(maxlen=512)
+        self.leftWing = collections.deque(maxlen=512)
 
 
     def run(self):
@@ -195,13 +195,13 @@ class MyThread(threading.Thread):
                             self.state[1] = self.leftWing
                             # print(self.state[1])
 
-                        if i == 2:
-                            self.drone_position[0] = np.mean(channel_data)
-                            # print(self.drone_angle[0])
-
-                        if i == 3:
-                            self.drone_position[1] = np.mean(channel_data)
-                            # print(self.drone_angle[0])
+                        # if i == 2:
+                        #     self.drone_position[0] = np.mean(channel_data)
+                        #     # print(self.drone_angle[0])
+                        #
+                        # if i == 3:
+                        #     self.drone_position[1] = np.mean(channel_data)
+                        #     # print(self.drone_angle[0])
 
 
         s.close()

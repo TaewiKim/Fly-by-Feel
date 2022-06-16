@@ -12,6 +12,7 @@ from utils.util import save_config, save_sac_model as save_model, write_summary
 import numpy as np
 import pandas as pd
 import random
+from utils.NatNetClient import NatNetClient
 
 np.set_printoptions(threshold=sys.maxsize)
 np.set_printoptions(linewidth=np.inf)
@@ -30,10 +31,34 @@ def main(config):
     ready.wait()
     tn.write(b"STARTACQ\r\n")
 
+    def receiveNewFrame(frameNumber, markerSetCount, unlabeledMarkersCount, rigidBodyCount, skeletonCount,
+                        labeledMarkerCount, timecode, timecodeSub, timestamp, isRecording, trackedModelsChanged):
+        # print( "Received frame", frameNumber )
+        None
+
+    # This is a callback function that gets connected to the NatNet client. It is called once per rigid body per frame
+    def receiveRigidBodyFrame(id, position, rotation):
+        # print( "Received frame for rigid body", id )
+        # print( "Received frame for rigid body", position, rotation)
+        x, y, z = position
+        r1, r2, r3, r4 = rotation
+        # return x, y, z
+
+    # This will create a new NatNet client
+    streamingClient = NatNetClient()
+
+    # Configure the streaming client to call our rigid body handler on the emulator to send data out.
+    streamingClient.newFrameListener = receiveNewFrame
+    streamingClient.rigidBodyListener = receiveRigidBodyFrame
+
+    # Start up the streaming client now that the callbacks are set up.
+    # This will run perpetually, and operate on a separate thread.
+    streamingClient.run()
+
     n_epi = 0
     path = config["log_dir"]
     writer = SummaryWriter(logdir=path)
-    env = Environment(config, my_thread, s_channel)
+    env = Environment(config, my_thread, s_channel, streamingClient)
     # env = DummyEnv()
 
     lr_q, tau = config["lr_q"], config["tau"]
@@ -76,7 +101,7 @@ def main(config):
         env.reset()
         done = False
         step = 0
-        data_log = [['epi', 'step', 'time', 'position', 'action', 'reward']]
+        data_log = [['epi', 'step', 'time', 'position', 'action', 'reward', 'state']]
         loop_t = 0.0
         prev_s, prev_a = None, None
         prev_drone_position = 0
@@ -107,7 +132,7 @@ def main(config):
             loop_t += t2
 
             if config["print_mode"]:
-                data_log.append([i, step, time.time()-init_t, drone_position, a_np, r])
+                data_log.append([i, step, time.time()-init_t, drone_position, a_np, r, s])
 
 
             if t2 < config["decision_period"]:

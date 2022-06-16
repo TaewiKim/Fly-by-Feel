@@ -8,11 +8,12 @@ from collections import deque
 
 
 class Environment:
-    def __init__(self, config, dw_thread, serial_channel: serialPlot):
+    def __init__(self, config, dw_thread, serial_channel: serialPlot, streamingClient):
         self.config = config
         self.target_position = config["target_position"]
         self.dw_thread = dw_thread
         self.serial_channel = serial_channel
+        self.streamingClient = streamingClient
         self.step_count = 0
         self.angle_sum = 0
         self.cur_angle = 0
@@ -55,26 +56,23 @@ class Environment:
         self.max_s = max(self.max_s, np.max(input_state))
         self.min_s = min(self.min_s, np.min(input_state))
 
-        fin_state = np.concatenate((np.array(input_state), [action_right, action_left]), axis=0)
+        #fin_state = np.concatenate((np.array(input_state), [action_right, action_left]), axis=0)
 
-        return fin_state, reward, done, Drone_position
-        # return np.array(input_state), reward, done, Drone_position
+        #return fin_state, reward, done, Drone_position
+        return np.array(input_state), reward, done, Drone_position
 
 
     def step(self, actions):
         a_right = actions[0]   # a_flap : -1 ~ 1
         a_left = actions[1]
 
-        #action_left = ((a_left + 1) / 2.0) * 100 + 100 # action : real number between 0 ~ 250, motor power
-        #if action_left < 105:
-        #    action_left = 0
+        action_left = ((a_left + 1) / 2.0) * 200 + 50 # action : real number between 0 ~ 250, motor power
+        if action_left < 55:
+           action_left = 0
 
-        #action_right = ((a_right + 1) / 2.0) * 200 # action : real number between 0 ~ 250, motor power
-        #if action_right < 55:
-        #    action_right = 0
-
-        action_left = ((a_right+a_left+2)/4)*250+50
-        action_right = ((a_right-a_left+2)/4)*250
+        action_right = ((a_right + 1) / 2.0) * 200 + 50 # action : real number between 0 ~ 250, motor power
+        if action_right < 55:
+           action_right = 0
 
         action_str = "L" + str(int(action_left)) + "%" + "R" + str(int(action_right)) + "%"
 
@@ -88,13 +86,14 @@ class Environment:
 
     def calc_reward_done(self, prev_drone_position):
         done = False
-        Drone_position = copy.deepcopy(self.dw_thread.drone_position)
+        Drone_position = self.streamingClient.pos
+        # print(Drone_position*1000)
 
-        mu = [230, 480]
-        cov = [[100000, 0], [0, 100000]]
+        mu = [0, 250]
+        cov = [[5000, 0], [0, 5000]]
 
         rv = multivariate_normal(mu, cov)
-        reward = rv.pdf([Drone_position[0], Drone_position[1]])*10**5
+        reward = rv.pdf([Drone_position[0]*1000, Drone_position[2]*1000])*10**3
 
         # stdev = 60
         # mean = self.target_position

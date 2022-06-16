@@ -11,6 +11,9 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
 import time
+import collections
+import math
+from mpl_toolkits.mplot3d import Axes3D
 
 HOST = ''  # Symbolic name meaning all available interfaces
 PORT = 8001  # Dewesoft port for data stream
@@ -49,12 +52,13 @@ class Package:
         #print(f'{data} {timestamp}')
         return data, timestamp
 
-    def read_data_as_sync(self, data_type, data_type_size, channel):
+    def read_data_as_sync(self, data_type, data_type_size, list_of_used_ch):
         num_of_samples = struct.unpack('i', self.data[0:4])[0]
-        #print(f'{num_of_samples} {data_type} {data_type_size}')
-        result = [struct.unpack(data_type, self.data[i + 4: i + 4 + data_type_size])[0] for i in
+        # print(f'{num_of_samples} {data_type} {data_type_size}')
+        result = [struct.unpack('f', self.data[i + 4: i + 4 + data_type_size])[0] for i in
                   range(0, num_of_samples * data_type_size, data_type_size)]
         self.data = self.data[4 + num_of_samples * data_type_size:]
+        # print(result)
         return result
 
     def read_data_as_single_value(self, data_type, data_type_size):
@@ -74,35 +78,73 @@ class Package:
 
 
 class DewePlot:
-    def __init__(self, ready, list_of_used_ch):
+    def __init__(self, ready, list_of_used_ch, Drone_position):
         self.ready = ready
         self.list_of_used_ch = list_of_used_ch
-        self.hLine, = plt.plot(0, 0)
-        self.hLine2, = plt.plot(0, 0)
-        self.ani = animation.FuncAnimation(plt.gcf(), self.run, interval=20)
+        self.Drone_position = Drone_position
+        fig = plt.figure()
+        ax = Axes3D(fig, auto_add_to_figure=False)
+        line_ani = animation.FuncAnimation(fig, self.Drone_position, interval=50, blit=False)
+        # line_ani.save(r'AnimationNew.mp4')
+        plt.show()
 
-    def run(self, i):
-        if (len(self.list_of_used_ch[0].timestamp) == len(self.list_of_used_ch[0].channel_data)):
-            self.hLine.set_data(self.list_of_used_ch[0].timestamp, self.list_of_used_ch[0].channel_data)
-            self.hLine.axes.relim()
-            self.hLine.axes.autoscale_view()
         # if (len(self.list_of_used_ch[1].timestamp) == len(self.list_of_used_ch[1].channel_data)):
         #     #print(f'Async: {len(self.list_of_used_ch[1].timestamp)} {len(self.list_of_used_ch[1].channel_data)}')
         #     self.hLine2.set_data(self.list_of_used_ch[1].timestamp, self.list_of_used_ch[1].channel_data)
         #     self.hLine2.axes.relim()
         #     self.hLine2.axes.autoscale_view()
 
-            plt.pause(0.001)
-        return self.hLine
+    def update_lines(num, dataLines, lines):
+        for line, data in zip(lines, dataLines):
+            # NOTE: there is no .set_data() for 3 dim data...
+            line.set_data(data[0:2, :num])
+            line.set_3d_properties(data[2, :num])
+        return lines
 
 
 class MyThread(threading.Thread):
     def __init__(self, ready, list_of_used_ch):
         threading.Thread.__init__(self)
+        zeros = np.zeros(320)
+
         self.ready = ready
         self.list_of_used_ch = list_of_used_ch
         self.buffer_data = b''
         self.time = time.time()
+        self.time_sync = 0
+        self.state = [0, 0]
+        self.angle = [0, 0, 0]
+        self.Drone_position = [0, 0, 0]
+        self.rightWing = collections.deque(maxlen=320)
+        self.rightWing.extend(zeros)
+        self.leftWing = collections.deque(maxlen=320)
+        self.leftWing.extend(zeros)
+        self.angle_1 = collections.deque(maxlen=320)
+        self.angle_1.extend(zeros)
+        self.angle_2 = collections.deque(maxlen=320)
+        self.angle_2.extend(zeros)
+        self.angle_3 = collections.deque(maxlen=320)
+        self.angle_3.extend(zeros)
+
+    def forward_kinematics(self, angle_1, angle_2, angle_3):
+        Px = -250
+        Py = 380
+        Pz = 220
+        L1 = 60
+        L2 = 380
+        L3 = 250
+        L4 = 160
+        theta_1 = math.radians(angle_1)
+        theta_2 = math.radians(angle_2)
+        theta_3 = math.radians(angle_3)
+
+        Px_drone = L3*(math.sin(theta_1)*math.cos(theta_2)*math.sin(theta_3)+math.cos(theta_1)*math.cos(theta_3))+L4*math.sin(theta_1)*math.sin(theta_2)-L2*math.sin(theta_1)*math.cos(theta_2)+Px
+        Py_drone = L3*(math.cos(theta_1)*math.cos(theta_2)*math.sin(theta_3)-math.sin(theta_1)*math.cos(theta_3))+L4*math.cos(theta_1)*math.sin(theta_2)-L2*math.cos(theta_1)*math.cos(theta_2)+Py
+        Pz_drone = L3*(math.sin(theta_2)*math.sin(theta_3))-L4*math.cos(theta_2)-L2*math.sin(theta_2)+Pz-L1
+
+        Drone_position = [Px_drone, Py_drone, Pz_drone]
+
+        return Drone_position
 
     def run(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -135,6 +177,7 @@ class MyThread(threading.Thread):
                 continue
             else:
                 self.buffer_data = self.buffer_data[current_package.end_index + 8:]
+
                 for i in range(0, len(self.list_of_used_ch)):
                     if self.list_of_used_ch[i].async_ch:
                         channel_data, timestamp = current_package.read_data_as_async(self.list_of_used_ch[i].data_type, self.list_of_used_ch[i].data_type_size)
@@ -156,6 +199,33 @@ class MyThread(threading.Thread):
                                                                                                                 second_time, 
                                                                                                                 num=len(channel_data))))[-MAX_SYNC_SAMPLES:]
 
-                        self.list_of_used_ch[i].number_of_added_samples = self.list_of_used_ch[i].number_of_added_samples + len(channel_data)
+                        self.list_of_used_ch[i].number_of_added_samples = self.list_of_used_ch[i].number_of_added_samples + len(channel_data)\
+
                         # print(len(channel_data), time.time()-self.time, channel_data)
+
+                        self.time_sync = time.time() - self.time
+
+                        if i == 0:
+                            self.rightWing.extend(channel_data)
+                            self.state[0] = self.rightWing
+
+                        if i == 1:
+                            self.leftWing.extend(channel_data)
+                            self.state[1] = self.leftWing
+
+                        if i == 2:
+                            self.angle_1.extend(channel_data)
+                            self.angle[0] = self.angle_1
+
+                        if i == 3:
+                            self.angle_2.extend(channel_data)
+                            self.angle[1] = self.angle_2
+
+                        if i == 4:
+                            self.angle_3.extend(channel_data)
+                            self.angle[2] = self.angle_3
+
+                        self.Drone_position = self.forward_kinematics(self.angle_1[-1], self.angle_2[-1], self.angle_3[-1])
+            print(self.Drone_position)
+
         s.close()
