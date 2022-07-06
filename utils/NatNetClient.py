@@ -109,7 +109,7 @@ class NatNetClient:
         if self.rigidBodyListener is not None:
             self.rigidBodyListener( id, pos, rot )
             self.pos = pos
-            self.rit = rot
+            self.rot = rot
 
         # RB Marker Data ( Before version 3.0.  After Version 3.0 Marker data is in description )
         if( self.__natNetStreamVersion[0] < 3  and self.__natNetStreamVersion[0] != 0) :

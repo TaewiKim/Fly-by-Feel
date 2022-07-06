@@ -87,22 +87,20 @@ class Environment:
     def calc_reward_done(self, prev_drone_position):
         done = False
         Drone_position = self.streamingClient.pos
-        # print(Drone_position*1000)
+        Drone_rotation = self.streamingClient.rot
 
-        mu = [0, 250]
-        cov = [[5000, 0], [0, 5000]]
-
+        mu = [0, 270, 0]
+        cov = [[10000, 0, 0], [0, 5000, 0], [0, 0, 10000]]
         rv = multivariate_normal(mu, cov)
-        reward = rv.pdf([Drone_position[0]*1000, Drone_position[2]*1000])*10**3
-
-        # stdev = 60
-        # mean = self.target_position
-        # reward = 1/(stdev*math.sqrt(2*math.pi))*np.exp(-0.5*((Drone_position-mean)/stdev)**2)*20
-
-
-        # if Drone_position > 330:
-        #     reward = -10
-        #     done = True
+        #
+        # mu_rot = [0, 0]
+        # cov_rot = [3000, 3000]
+        # rv_rot = multivariate_normal(mu_rot, cov_rot)
+        #
+        reward = rv.pdf([Drone_position[0]*1000, Drone_position[1]*1000, Drone_position[2]*1000])*10**6
+        if Drone_position[1]*1000 < 220:
+            reward = 0
+        # reward = (-(abs(Drone_position[0])+abs(Drone_position[2]))+(Drone_position[1]-0.19)*2)/100
 
         if self.step_count >= self.config["max_episode_len"]:
             done = True
