@@ -63,25 +63,25 @@ class Environment:
 
 
     def step(self, actions):
-        a_right = actions[0]   # a_flap : -1 ~ 1
-        a_left = actions[1]
+        a_front = actions[0]   # a_flap : -1 ~ 1
+        a_tail = actions[1]
 
-        action_left = ((a_left + 1) / 2.0) * 200 + 50 # action : real number between 0 ~ 250, motor power
-        if action_left < 55:
-           action_left = 0
+        action_tail = (a_tail) * 120 # action : real number between -120~120, motor power
+        if abs(action_tail) < 35:
+           action_tail = 0
 
-        action_right = ((a_right + 1) / 2.0) * 200 + 50 # action : real number between 0 ~ 250, motor power
-        if action_right < 55:
-           action_right = 0
+        action_front = ((a_front + 1) / 2.0) * 200 + 50 # action : real number between 0 ~ 250, motor power
+        if action_front < 55:
+           action_front = 0
 
-        action_str = "L" + str(int(action_left)) + "%" + "R" + str(int(action_right)) + "%"
+        action_str = "L" + str(int(action_tail)) + "%" + "R" + str(int(action_front)) + "%"
 
         self.step_count += 1
 
         self.serial_channel.serialConnection.write(action_str.encode())
         for i in range(int(1280 * self.config["decision_period"])):
-            self.action_right_queue.append(a_right)
-            self.action_left_queue.append(a_left)
+            self.action_right_queue.append(a_front)
+            self.action_left_queue.append(a_tail)
 
 
     def calc_reward_done(self, prev_drone_position):
@@ -89,7 +89,7 @@ class Environment:
         Drone_position = self.streamingClient.pos
         Drone_rotation = self.streamingClient.rot
 
-        mu = [0, 270, 0]
+        mu = [0, 300, 100]
         cov = [[10000, 0, 0], [0, 5000, 0], [0, 0, 10000]]
         rv = multivariate_normal(mu, cov)
         #
@@ -98,7 +98,7 @@ class Environment:
         # rv_rot = multivariate_normal(mu_rot, cov_rot)
         #
         reward = rv.pdf([Drone_position[0]*1000, Drone_position[1]*1000, Drone_position[2]*1000])*10**6
-        if Drone_position[1]*1000 < 220:
+        if Drone_position[1]*1000 < 240:
             reward = 0
         # reward = (-(abs(Drone_position[0])+abs(Drone_position[2]))+(Drone_position[1]-0.19)*2)/100
 

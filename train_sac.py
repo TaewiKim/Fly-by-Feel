@@ -176,7 +176,7 @@ def main(config):
             env.serial_channel.serialConnection.write(Fan_str.encode())
 
         env.stop_drone()
-        time.sleep(5)
+        time.sleep(15)
         score = 0.0
         n_epi += 1
         action_sum = 0
@@ -206,10 +206,10 @@ if __name__ == "__main__":
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
         "target_position": 0,
         "print_mode": False,
-        "Fan_power": 200,
+        "Fan_power": 160,
         "Fan_rand": False,
         "trained_model_path": None,
-        # "trained_model_path" : "logs/[07-05]21.10.38/sac_model_19720.tar"
+        # "trained_model_path" : "logs/[07-06]13.48.28/sac_model_8360.tar"
     }
     main(config)
 
