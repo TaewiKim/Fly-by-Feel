@@ -89,17 +89,25 @@ class Environment:
         Drone_position = self.streamingClient.pos
         Drone_rotation = self.streamingClient.rot
 
-        mu = [0, 300, 100]
-        cov = [[10000, 0, 0], [0, 5000, 0], [0, 0, 10000]]
+        # mu = [0, 400, 100]
+        # cov = [[10000, 0, 0], [0, 5000, 0], [0, 0, 10000]]
+        # rv = multivariate_normal(mu, cov)
+        # reward = rv.pdf([Drone_position[0]*1000, Drone_position[1]*1000, Drone_position[2]*1000])*10**6
+        # if abs(Drone_position[0])*1000 > 300:
+        #     reward = -0.01
+
+        mu = [0, 200]
+        cov = [[10000, 0], [0, 10000]]
         rv = multivariate_normal(mu, cov)
+        reward = rv.pdf([Drone_position[0]*1000, Drone_position[2]*1000])*10**4
+        if abs(Drone_position[0])*1000 > 300:
+            reward = -0.05
         #
         # mu_rot = [0, 0]
         # cov_rot = [3000, 3000]
         # rv_rot = multivariate_normal(mu_rot, cov_rot)
         #
-        reward = rv.pdf([Drone_position[0]*1000, Drone_position[1]*1000, Drone_position[2]*1000])*10**6
-        if Drone_position[1]*1000 < 240:
-            reward = 0
+
         # reward = (-(abs(Drone_position[0])+abs(Drone_position[2]))+(Drone_position[1]-0.19)*2)/100
 
         if self.step_count >= self.config["max_episode_len"]:

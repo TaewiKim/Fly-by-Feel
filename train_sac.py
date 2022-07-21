@@ -156,7 +156,7 @@ def main(config):
                 train_t_lst.append(time.time()-t1)
                 loss_lst.append(loss1)
 
-            write_summary(writer, config, n_epi, score, pi.optimization_step, np.mean(loss_lst), 0.0, env, loop_t/float(step), np.mean(train_t_lst), pi.log_alpha.exp().item(), action_sum[0], action_sum[1])
+            write_summary(writer, config, n_epi, score, pi.optimization_step, np.mean(loss_lst), 0.0, env, loop_t/float(step), np.mean(train_t_lst), pi.log_alpha.exp().item(), action_sum[0], action_sum[1], entropy.mean().itme())
 
 
         if n_epi % config["model_save_interval"] == 0:
@@ -209,7 +209,7 @@ if __name__ == "__main__":
         "Fan_power": 160,
         "Fan_rand": False,
         "trained_model_path": None,
-        # "trained_model_path" : "logs/[07-06]13.48.28/sac_model_8360.tar"
+        # "trained_model_path" : "logs/[07-20]14.26.32/sac_model_5920.tar"
     }
     main(config)
 

@@ -122,4 +122,4 @@ def calc_target(pi, q1, q2, mini_batch, gamma):
         min_q = torch.min(q1_q2, 1, keepdim=True)[0]
         target = r + gamma * done * (min_q + entropy)
 
-    return target.float()
+    return target.float(), entropy
