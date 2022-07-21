@@ -102,7 +102,9 @@ class Environment:
         reward = rv.pdf([Drone_position[0]*1000, Drone_position[2]*1000])*10**4
         if abs(Drone_position[0])*1000 > 300:
             reward = -0.05
-        #
+        if abs(Drone_position[0]) * 1000 > 450:
+            done = True
+
         # mu_rot = [0, 0]
         # cov_rot = [3000, 3000]
         # rv_rot = multivariate_normal(mu_rot, cov_rot)

@@ -65,6 +65,7 @@ class PolicyNet(nn.Module):
         alpha_loss = -(self.log_alpha.exp() * (log_prob + self.target_entropy).detach()).mean()
         alpha_loss.backward()
         self.log_alpha_optimizer.step()
+        return entropy
 
 class QNet(nn.Module):
     def __init__(self, learning_rate, tau):
@@ -122,4 +123,4 @@ def calc_target(pi, q1, q2, mini_batch, gamma):
         min_q = torch.min(q1_q2, 1, keepdim=True)[0]
         target = r + gamma * done * (min_q + entropy)
 
-    return target.float(), entropy
+    return target.float()

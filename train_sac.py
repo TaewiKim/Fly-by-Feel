@@ -208,8 +208,8 @@ if __name__ == "__main__":
         "print_mode": False,
         "Fan_power": 160,
         "Fan_rand": False,
-        "trained_model_path": None,
-        # "trained_model_path" : "logs/[07-20]14.26.32/sac_model_5920.tar"
+        # "trained_model_path": None,
+        "trained_model_path" : "logs/[07-21]12.27.24/sac_model_13760.tar"
     }
     main(config)
 
