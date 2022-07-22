@@ -104,7 +104,7 @@ def main(config):
         data_log = [['epi', 'step', 'time', 'position', 'action', 'reward', 'state']]
         loop_t = 0.0
         prev_s, prev_a = None, None
-        prev_drone_position = 0
+        prev_drone_position = [0, 0, 0]
         init_t = time.time()
 
         while not done:
@@ -156,7 +156,7 @@ def main(config):
                 train_t_lst.append(time.time()-t1)
                 loss_lst.append(loss1)
 
-            write_summary(writer, config, n_epi, score, pi.optimization_step, np.mean(loss_lst), 0.0, env, loop_t/float(step), np.mean(train_t_lst), pi.log_alpha.exp().item(), action_sum[0], action_sum[1], entropy.mean().itme())
+            write_summary(writer, config, n_epi, score, pi.optimization_step, np.mean(loss_lst), 0.0, env, loop_t/float(step), np.mean(train_t_lst), pi.log_alpha.exp().item(), action_sum[0], action_sum[1], entropy.mean().item())
 
 
         if n_epi % config["model_save_interval"] == 0:
@@ -209,7 +209,7 @@ if __name__ == "__main__":
         "Fan_power": 160,
         "Fan_rand": False,
         # "trained_model_path": None,
-        "trained_model_path" : "logs/[07-21]12.27.24/sac_model_13760.tar"
+        "trained_model_path" : "logs/[07-21]23.39.58/sac_model_41300.tar"
     }
     main(config)
 

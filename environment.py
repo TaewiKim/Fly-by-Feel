@@ -96,10 +96,12 @@ class Environment:
         # if abs(Drone_position[0])*1000 > 300:
         #     reward = -0.01
 
-        mu = [0, 200]
-        cov = [[10000, 0], [0, 10000]]
-        rv = multivariate_normal(mu, cov)
-        reward = rv.pdf([Drone_position[0]*1000, Drone_position[2]*1000])*10**4
+        # mu = [0, 200]
+        # cov = [[10000, 0], [0, 10000]]
+        # rv = multivariate_normal(mu, cov)
+        # reward = rv.pdf([Drone_position[0]*1000, Drone_position[2]*1000])*10**4
+        Target_position = [0, 250]
+        reward = (np.sqrt((Target_position[0]*100-prev_drone_position[0]*100)**2+(Target_position[1]*100-prev_drone_position[2]*100)**2) - np.sqrt((Target_position[0]*100-Drone_position[0]*100)**2+(Target_position[1]*100-Drone_position[2]*100)**2))*10**(-2)
         if abs(Drone_position[0])*1000 > 300:
             reward = -0.05
         if abs(Drone_position[0]) * 1000 > 450:
