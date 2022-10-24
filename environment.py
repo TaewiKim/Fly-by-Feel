@@ -1,3 +1,5 @@
+import random
+
 import numpy as np
 from utils.serialChannel import serialPlot
 import copy
@@ -42,6 +44,7 @@ class Environment:
 
     def get_current_state(self, prev_drone_position):
         input_state = self.dw_thread.state
+        # print(input_state)
         action_right = np.array(self.action_right_queue)
         action_left = np.array(self.action_left_queue)
 
@@ -66,13 +69,15 @@ class Environment:
         a_front = actions[0]   # a_flap : -1 ~ 1
         a_tail = actions[1]
 
-        action_tail = (a_tail) * 120 # action : real number between -120~120, motor power
-        if abs(action_tail) < 35:
-           action_tail = 0
+        # a_front = -1
+        # a_tail = 0
+
+        action_tail = (a_tail) * 150 # action : real number between -120~120, motor power
 
         action_front = ((a_front + 1) / 2.0) * 200 + 50 # action : real number between 0 ~ 250, motor power
         if action_front < 55:
-           action_front = 0
+            action_front = 0
+
 
         action_str = "L" + str(int(action_tail)) + "%" + "R" + str(int(action_front)) + "%"
 
@@ -89,23 +94,24 @@ class Environment:
         Drone_position = self.streamingClient.pos
         Drone_rotation = self.streamingClient.rot
 
-        # mu = [0, 400, 100]
-        # cov = [[10000, 0, 0], [0, 5000, 0], [0, 0, 10000]]
+        # mu = [0, 350, 200]
+        # cov = [[10000, 0, 0], [0, 5000, 0], [0, 0, 20000]]
         # rv = multivariate_normal(mu, cov)
-        # reward = rv.pdf([Drone_position[0]*1000, Drone_position[1]*1000, Drone_position[2]*1000])*10**6
-        # if abs(Drone_position[0])*1000 > 300:
-        #     reward = -0.01
+        # reward = rv.pdf([Drone_position[0]*1000, Drone_position[1]*1000, Drone_position[2]*1000])*10**7/2
 
-        # mu = [0, 200]
-        # cov = [[10000, 0], [0, 10000]]
-        # rv = multivariate_normal(mu, cov)
-        # reward = rv.pdf([Drone_position[0]*1000, Drone_position[2]*1000])*10**4
-        Target_position = [0, 250]
-        reward = (np.sqrt((Target_position[0]*100-prev_drone_position[0]*100)**2+(Target_position[1]*100-prev_drone_position[2]*100)**2) - np.sqrt((Target_position[0]*100-Drone_position[0]*100)**2+(Target_position[1]*100-Drone_position[2]*100)**2))*10**(-2)
-        if abs(Drone_position[0])*1000 > 300:
-            reward = -0.05
-        if abs(Drone_position[0]) * 1000 > 450:
-            done = True
+        mu = [200, 200]
+        cov = [[5000, 0], [0, 20000]]
+        rv = multivariate_normal(mu, cov)
+        reward = rv.pdf([Drone_position[0]*1000, Drone_position[2]*1000])*10**4*1.5
+
+        # Target_position = [0, 250]
+        # reward = (np.sqrt((Target_position[0]*100-prev_drone_position[0]*100)**2+(Target_position[1]*100-prev_drone_position[2]*100)**2) - np.sqrt((Target_position[0]*100-Drone_position[0]*100)**2+(Target_position[1]*100-Drone_position[2]*100)**2))*10**(-2)
+
+        if Drone_position[2]*1000 < -300:
+            reward = -0.1
+            # done = True
+        if abs(Drone_position[0])*1000 > 400:
+            reward = -0.1
 
         # mu_rot = [0, 0]
         # cov_rot = [3000, 3000]

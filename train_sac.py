@@ -97,7 +97,7 @@ def main(config):
     n_epi = 0
     action_sum = 0
 
-    for i in range(2000):
+    for i in range(500):
         env.reset()
         done = False
         step = 0
@@ -206,11 +206,9 @@ if __name__ == "__main__":
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
         "target_position": 0,
         "print_mode": False,
-        "Fan_power": 160,
+        "Fan_power": 150,
         "Fan_rand": False,
-        # "trained_model_path": None,
-        "trained_model_path" : "logs/[07-21]23.39.58/sac_model_41300.tar"
+        "trained_model_path": None,
+        # "trained_model_path" : "logs/[08-24]17.25.21/sac_model_5360.tar"
     }
     main(config)
-
-
