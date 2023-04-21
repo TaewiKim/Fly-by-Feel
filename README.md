@@ -1,3 +1,3 @@
 # FlappingDrone
 
-## Breif explanations for overvall codes wii be updated soon
+## Breif explanations for overvall codes will be updated soon
