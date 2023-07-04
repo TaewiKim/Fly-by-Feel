@@ -36,26 +36,20 @@ def save_dqn_model(config, model, n_epi):
     path = config["log_dir"] + f"/dqn_model_{model.optimization_step}.tar"
     torch.save(model_dict, path)
 
-def write_summary(writer, config, n_epi, score, optimization_step, avg_loss, epsilon, env:Environment, avg_loop_t, train_t, alpha, action_sum_right, action_sum_left, entropy):
+def write_summary(writer, config, n_epi, score, optimization_step, avg_loss, epsilon, env:Environment, avg_loop_t, train_t, alpha, action_sum, entropy):
     writer.add_scalar('agent/score', score, n_epi)
-    writer.add_scalar('agent/avg_angle', env.angle_sum/float(env.step_count), n_epi)
-    writer.add_scalar('agent/max_angle', env.max_Px, n_epi)
-    writer.add_scalar('agent/min_angle', env.min_Px, n_epi)
-    writer.add_scalar('agent/avg_actions_right', action_sum_right / float(env.step_count), n_epi)
-    writer.add_scalar('agent/avg_actions_left', action_sum_left / float(env.step_count), n_epi)
+    writer.add_scalar('agent/avg_Px', env.Px_sum/float(env.step_count), n_epi)
+    writer.add_scalar('agent/max_Px', env.max_Px, n_epi)
+    writer.add_scalar('agent/min_Px', env.min_Px, n_epi)
+    writer.add_scalar('agent/avg_Py', env.Py_sum/float(env.step_count), n_epi)
+    writer.add_scalar('agent/max_Py', env.max_Py, n_epi)
+    writer.add_scalar('agent/min_Py', env.min_Py, n_epi)
+    writer.add_scalar('agent/avg_Pz', env.Pz_sum/float(env.step_count), n_epi)
+    writer.add_scalar('agent/max_Pz', env.max_Pz, n_epi)
+    writer.add_scalar('agent/min_Pz', env.min_Pz, n_epi)
 
-    # writer.add_scalar('distance/min', np.min(env.distance), n_epi)
-    # writer.add_scalar('distance/mean', np.mean(env.distance), n_epi)
-    # writer.add_scalar('distance/max', np.max(env.distance), n_epi)
-    # writer.add_scalar('distance/x_min', np.min(env.x_lst), n_epi)
-    # writer.add_scalar('distance/x_mean', np.mean(env.x_lst), n_epi)
-    # writer.add_scalar('distance/x_max', np.max(env.x_lst), n_epi)
-    # writer.add_scalar('distance/y_min', np.min(env.y_lst), n_epi)
-    # writer.add_scalar('distance/y_mean', np.mean(env.y_lst), n_epi)
-    # writer.add_scalar('distance/y_max', np.max(env.y_lst), n_epi)
-    # writer.add_scalar('distance/z_min', np.min(env.z_lst), n_epi)
-    # writer.add_scalar('distance/z_mean', np.mean(env.z_lst), n_epi)
-    # writer.add_scalar('distance/z_max', np.max(env.z_lst), n_epi)
+    writer.add_scalar('agent/avg_actions_thrust', action_sum[0] / float(env.step_count), n_epi)
+    writer.add_scalar('agent/avg_actions_direction', action_sum[1] / float(env.step_count), n_epi)
 
     writer.add_scalar('agent/len_epi', env.step_count, n_epi)
     writer.add_scalar('train/alpha', alpha, n_epi)
@@ -66,9 +60,3 @@ def write_summary(writer, config, n_epi, score, optimization_step, avg_loss, eps
     writer.add_scalar('time/train', train_t, n_epi)
     writer.add_scalar('state/max_val', env.max_s, n_epi)
     writer.add_scalar('state/min_val', env.min_s, n_epi)
-    # if config["is_discrete"]:
-    #     writer.add_scalar('agent/eps', epsilon, n_epi)
-    #     writer.add_scalar('action/ratio_motor_power_0', env.action_count[0] / float(np.sum(env.action_count)), n_epi)
-    #     writer.add_scalar('action/ratio_motor_power_150', env.action_count[1] / float(np.sum(env.action_count)), n_epi)
-    #     writer.add_scalar('action/ratio_motor_power_200', env.action_count[2] / float(np.sum(env.action_count)), n_epi)
-    #     writer.add_scalar('action/ratio_motor_power_250', env.action_count[3] / float(np.sum(env.action_count)), n_epi)

@@ -17,10 +17,11 @@ class Environment:
         self.serial_channel = serial_channel
         self.streamingClient = streamingClient
         self.step_count = 0
-        self.angle_sum = 0
-        self.cur_angle = 0
+        self.Px_sum = 0
+        self.Py_sum = 0
+        self.Pz_sum = 0
         self.Drone_position = 0
-        self.init_angle = 0
+        self.human_action = 0
 
         self.n_state = 256
 
@@ -36,22 +37,28 @@ class Environment:
     def reset(self):
         self.stop_drone()
         self.step_count = 0
-        self.cur_angle = 0
         self.max_Px, self.min_Px = -100000.0, 1000000.0
+        self.max_Py, self.min_Py = -100000.0, 1000000.0
+        self.max_Pz, self.min_Pz = -100000.0, 1000000.0
         self.max_s, self.min_s = -100000.0, 1000000.0
         self.init_action_queue()
 
 
-    def get_current_state(self, prev_drone_position):
+    def get_current_state(self):
         input_state = self.dw_thread.state
         # print(input_state)
-        action_right = np.array(self.action_right_queue)
-        action_left = np.array(self.action_left_queue)
+        self.human_action = self.dw_thread.human_action
 
-        reward, done, Drone_position = self.calc_reward_done(prev_drone_position)
+        reward, done, Drone_position = self.calc_reward_done()
         self.max_Px = max(self.max_Px, Drone_position[0])
         self.min_Px = min(self.min_Px, Drone_position[0])
-        self.angle_sum += Drone_position[0]
+        self.Px_sum += Drone_position[0]
+        self.max_Py = max(self.max_Py, Drone_position[1])
+        self.min_Py = min(self.min_Py, Drone_position[1])
+        self.Py_sum += Drone_position[1]
+        self.max_Pz = max(self.max_Pz, Drone_position[2])
+        self.min_Pz = min(self.min_Pz, Drone_position[2])
+        self.Pz_sum += Drone_position[2]
 
         if done:
             self.stop_drone()
@@ -66,59 +73,54 @@ class Environment:
 
 
     def step(self, actions):
-        a_front = actions[0]   # a_flap : -1 ~ 1
-        a_tail = actions[1]
+        a_thrust = actions[0]   # a_thrust : -1 ~ 1
+        a_direction = actions[1]
 
-        # a_front = -1
-        # a_tail = 0
+        action_tail = (a_direction) * 150 # action : real number between -150~150, motor power
 
-        action_tail = (a_tail) * 150 # action : real number between -120~120, motor power
-
-        action_front = ((a_front + 1) / 2.0) * 200 + 50 # action : real number between 0 ~ 250, motor power
+        action_front = ((a_thrust + 1) / 2.0) * 200 + 50 # action : real number between 0 ~ 250, motor power
         if action_front < 55:
             action_front = 0
 
 
-        action_str = "L" + str(int(action_tail)) + "%" + "R" + str(int(action_front)) + "%"
+        action_str = "T" + str(int(action_tail)) + "%" + "D" + str(int(action_front)) + "%"
 
         self.step_count += 1
 
         self.serial_channel.serialConnection.write(action_str.encode())
         for i in range(int(1280 * self.config["decision_period"])):
-            self.action_right_queue.append(a_front)
-            self.action_left_queue.append(a_tail)
+            self.action_right_queue.append(a_thrust)
+            self.action_left_queue.append(a_direction)
 
 
-    def calc_reward_done(self, prev_drone_position):
+    def calc_reward_done(self):
         done = False
         Drone_position = self.streamingClient.pos
-        Drone_rotation = self.streamingClient.rot
+        # Drone_rotation = self.streamingClient.rot
 
-        # mu = [0, 350, 200]
-        # cov = [[10000, 0, 0], [0, 5000, 0], [0, 0, 20000]]
-        # rv = multivariate_normal(mu, cov)
-        # reward = rv.pdf([Drone_position[0]*1000, Drone_position[1]*1000, Drone_position[2]*1000])*10**7/2
-
-        mu = [200, 200]
-        cov = [[5000, 0], [0, 20000]]
+        mu = self.target_position
+        cov = [[500000, 0, 0], [0, 500000, 0], [0, 0, 100000000]]
         rv = multivariate_normal(mu, cov)
-        reward = rv.pdf([Drone_position[0]*1000, Drone_position[2]*1000])*10**4*1.5
+        reward = rv.pdf([Drone_position[0], Drone_position[1], Drone_position[2]])*10**7/2
 
-        # Target_position = [0, 250]
-        # reward = (np.sqrt((Target_position[0]*100-prev_drone_position[0]*100)**2+(Target_position[1]*100-prev_drone_position[2]*100)**2) - np.sqrt((Target_position[0]*100-Drone_position[0]*100)**2+(Target_position[1]*100-Drone_position[2]*100)**2))*10**(-2)
-
-        if Drone_position[2]*1000 < -300:
-            reward = -0.1
-            # done = True
-        if abs(Drone_position[0])*1000 > 400:
-            reward = -0.1
-
-        # mu_rot = [0, 0]
-        # cov_rot = [3000, 3000]
-        # rv_rot = multivariate_normal(mu_rot, cov_rot)
+        # if abs(Drone_position[0]) > 2000:
+        #     reward = -0.1
+        #     done = True
         #
-
-        # reward = (-(abs(Drone_position[0])+abs(Drone_position[2]))+(Drone_position[1]-0.19)*2)/100
+        # if abs(Drone_position[1]) > 3000:
+        #     reward = -0.1
+        #     done = True
+        #
+        # if abs(Drone_position[1]) < 100:
+        #     reward = -0.1
+        #     done = True
+        #
+        # if Drone_position[2] < -5000:
+        #     reward = -0.1
+        #     done = True
+        #
+        # if Drone_position[2] > 5000:
+        #     done = True
 
         if self.step_count >= self.config["max_episode_len"]:
             done = True
@@ -127,7 +129,7 @@ class Environment:
 
 
     def stop_drone(self):
-        action_str = "L" + str(0) + "%" + "R" + str(0) + "%"
+        action_str = "T" + str(0) + "%" + "D" + str(0) + "%"
         self.serial_channel.serialConnection.write(action_str.encode())
 
 
@@ -145,7 +147,6 @@ class DummyEnv:
 
     def step(self, action):
         self.step_count += 1
-
 
         return np.random.rand(32), +0.01, False
 

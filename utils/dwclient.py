@@ -23,39 +23,36 @@ class Channel:
 
         self.async_ch = False
         self.single_value = False
-        if input[6] == "Async":
+        if input[7] == "Async":
             self.async_ch = True
-        elif input[6] == "SingleValue":
+        elif input[7] == "SingleValue":
             self.single_value = True
         else:
-            self.sample_div = int(input[6])
-        self.expected_async_rate = float(input[7])
+            self.sample_div = int(input[7])
+        # self.expected_async_rate = float(input[7])
         self.measur_type = int(input[8])
-        self.data_type = DATA_TYPES[int(input[9])]
-        self.data_type_size = DATA_SIZE[int(input[9])]
-        self.buffer_size = int(input[10])
-        self.custom_scale = float(input[11])
-        self.custom_offset = float(input[12])
-        self.scale_raw_data = float(input[13].replace(",", "."))
-        self.offset_raw_data = float(input[14])
-        self.description = input[15]
-        self.settings = input[16]
-        self.range_min = float(input[17].replace(",", "."))
-        self.range_max = float(input[18].replace(",", "."))
-        if input[19] == 'OvlYes':
+        self.data_type = DATA_TYPES[int(input[10])]
+        self.data_type_size = DATA_SIZE[int(input[10])]
+        self.buffer_size = int(input[11])
+        self.custom_scale = float(input[12])
+        self.custom_offset = float(input[13])
+        # self.scale_raw_data = float(input[13].replace(",", "."))
+        self.offset_raw_data = float(input[15])
+        self.description = input[16]
+        self.settings = input[17]
+        # self.range_min = float(input[17].replace(",", "."))
+        self.range_max = float(input[19].replace(",", "."))
+        if input[20] == 'OvlYes':
             self.can_overload = True
-        elif input[19] == 'OvlNo':
+        elif input[20] == 'OvlNo':
             self.can_overload = False
         else:
             self.can_overload = False
-        self.auto_zero = bool(input[20])
-        if int(input[21]) > 0:
-            self.discrete_list = [element for element in input[22: 22 + int(21)]]
+        self.auto_zero = bool(input[21])
+        if int(input[23]) > 0:
+            self.discrete_list = [element for element in input[23: 23 + int(23)]]
         else:
             self.discrete_list = []
-        # self.current_min = float(input[21 + int(input[21]) + 1].replace(",", "."))
-        # self.current_max = float(input[21 + int(input[21]) + 2].replace(",", "."))
-        # self.current_avg = float(input[21 + int(input[21]) + 3].replace(",", "."))
 
 
 def process_listusedchs(input, sample_rate):
@@ -66,12 +63,12 @@ def process_listusedchs(input, sample_rate):
         list_of_used_ch.append(Channel(output_element, sample_rate))
     return list_of_used_ch
 
-
 def prepare_channels(selected_channels, input_array):
     result_array = []
     for element in selected_channels:
         result_array.append(input_array[element])
     return result_array
+
 
 def get_dewe_thread():
 
@@ -100,13 +97,13 @@ def get_dewe_thread():
     tn.write(b"LISTUSEDCHS\r\n")  # here we get list of all used channels
     list_of_used_ch = process_listusedchs(tn.read_until(b'+ETX end list\r\n'), float(sample_rate_str))
 
-    list_of_used_ch = prepare_channels([6, 7], list_of_used_ch)  # filter channels
+    list_of_used_ch = prepare_channels([6, 7, 8, 9], list_of_used_ch)  # filter channels
     tn.write(
-        b'/stx preparetransfer\r\nCH 6\r\nCH 7\r\n/etx\r\n')  # here we select which channels we want to transfer
+        b'/stx preparetransfer\r\nCH 6\r\nCH 7\r\nCH 8\r\nCH 9\r\n/etx\r\n')  # here we select which channels we want to transfer
     print(tn.read_some())
 
     my_thread = dwserver.MyThread(ready, list_of_used_ch)
-
+    #
     # my_thread.start()
     # tn.write(b"STARTTRANSFER 8001\r\n")
     # print(tn.read_some())

@@ -21,7 +21,7 @@ def main(config):
     np.set_printoptions(precision=3)
     save_config(config)
 
-    s_channel = serialPlot('COM3', 19200, 4)  # dataNumBytes 4  : number of bytes of 1 data point
+    s_channel = serialPlot('COM6', 19200, 4)  # dataNumBytes 4  : number of bytes of 1 data point
     s_channel.readSerialStart()  # starts background thread
 
     my_thread, tn, ready = get_dewe_thread()
@@ -95,7 +95,7 @@ def main(config):
     score = 0.0
     avg_loss = 0.0
     n_epi = 0
-    action_sum = 0
+    action_sum = [0, 0]
 
     for i in range(500):
         env.reset()
@@ -109,13 +109,18 @@ def main(config):
 
         while not done:
             t1 = time.time()
-            s, r, done, drone_position = env.get_current_state(prev_drone_position)
+            s, r, done, drone_position = env.get_current_state()
             a, _ = pi(torch.from_numpy(s).float().unsqueeze(0))
             a_np = a.detach().numpy()
             a_np = a_np[0]
+
+            if config["human_train"]:
+                a_np = env.human_action
+
             env.step(a_np)
 
-            action_sum += a_np
+            action_sum = [sum(x) for x in zip(action_sum, a_np)]
+
             done_mask = 0.0 if done else 1.0
             if prev_s is not None:
                 memory.put((prev_s, a_np, r, s, done_mask))
@@ -124,6 +129,7 @@ def main(config):
 
             step += 1
             score += r
+
             if done:
                 print("n_episode :{}, score : {:.1f}, n_buffer : {}".format(n_epi, score, memory.size()))
                 break
@@ -179,8 +185,10 @@ def main(config):
         time.sleep(15)
         score = 0.0
         n_epi += 1
-        action_sum = 0
-        env.angle_sum = 0
+        action_sum = [0, 0]
+        env.Px_sum = 0
+        env.Py_sum = 0
+        env.Pz_sum = 0
 
 
     env.stop_drone()
@@ -201,13 +209,14 @@ if __name__ == "__main__":
         "batch_size" : 64, #32
         "train_start_buffer_size" : 1000,  #5000
         "decision_period" : 0.05,
-        "model_save_interval" : 30,
+        "model_save_interval" : 10,
         "max_episode_len" : 300, # 0.05*400 = 15 sec
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
-        "target_position": 0,
+        "target_position": [0, 1500, 5000],
         "print_mode": False,
-        "Fan_power": 150,
+        "Fan_power": 0,
         "Fan_rand": False,
+        "human_train": True,
         "trained_model_path": None,
         # "trained_model_path" : "logs/[08-24]17.25.21/sac_model_5360.tar"
     }

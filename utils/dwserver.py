@@ -46,9 +46,7 @@ class Package:
         for i in range(1, num_of_samples + 1):
             data.append(struct.unpack(data_type, self.data[i * 4:i * 4 + data_type_size])[0])
         for i in range(1, num_of_samples + 1):
-            timestamp.append(struct.unpack('d', self.data[
-                                                i * 4 + (i - 1) * 4 + num_of_samples * data_type_size: i * 4 + (
-                                                            i - 1) * 4 + 8 + num_of_samples * data_type_size])[0])
+            timestamp.append(struct.unpack('d', self.data[i * 4 + (i - 1) * 4 + num_of_samples * data_type_size: i * 4 + (i - 1) * 4 + 8 + num_of_samples * data_type_size])[0])
         self.data = self.data[4 + num_of_samples * (data_type_size + 8):]  # 8 is size of double timestamp
         # print(f'{data} {timestamp}')
         return data, timestamp
@@ -77,29 +75,6 @@ class Package:
             self.data = self.data + input[:]
 
 
-class DewePlot:
-    def __init__(self, ready, list_of_used_ch):
-        self.ready = ready
-        self.list_of_used_ch = list_of_used_ch
-        self.hLine, = plt.plot(0, 0)
-        self.hLine2, = plt.plot(0, 0)
-        self.ani = animation.FuncAnimation(plt.gcf(), self.run, interval=20)
-
-    def run(self, i):
-        if (len(self.list_of_used_ch[0].timestamp) == len(self.list_of_used_ch[0].channel_data)):
-            self.hLine.set_data(self.list_of_used_ch[0].timestamp, self.list_of_used_ch[0].channel_data)
-            self.hLine.axes.relim()
-            self.hLine.axes.autoscale_view()
-            # if (len(self.list_of_used_ch[1].timestamp) == len(self.list_of_used_ch[1].channel_data)):
-            #     #print(f'Async: {len(self.list_of_used_ch[1].timestamp)} {len(self.list_of_used_ch[1].channel_data)}')
-            #     self.hLine2.set_data(self.list_of_used_ch[1].timestamp, self.list_of_used_ch[1].channel_data)
-            #     self.hLine2.axes.relim()
-            #     self.hLine2.axes.autoscale_view()
-
-            plt.pause(0.001)
-        return self.hLine
-
-
 class MyThread(threading.Thread):
     def __init__(self, ready, list_of_used_ch):
         threading.Thread.__init__(self)
@@ -110,8 +85,9 @@ class MyThread(threading.Thread):
         self.time_sync = 0
         self.state = [0, 0]
         self.drone_position = [0, 0]
-        self.rightWing = collections.deque(maxlen=512)
-        self.leftWing = collections.deque(maxlen=512)
+        self.rightWing = collections.deque(maxlen=256)
+        self.leftWing = collections.deque(maxlen=256)
+        self.human_action = [0, 0]
 
 
     def run(self):
@@ -136,7 +112,7 @@ class MyThread(threading.Thread):
         print('Connected with ' + addr[0] + ':' + str(addr[1]))
         self.ready.set()
         while True:
-            self.buffer_data += conn.recv(4000)  # size 2000 is default size of dewesoft packages
+            self.buffer_data += conn.recv(2000)  # size 2000 is default size of dewesoft packages
             if not self.buffer_data:
                 break
 
@@ -147,11 +123,9 @@ class MyThread(threading.Thread):
                 self.buffer_data = self.buffer_data[current_package.end_index + 8:]
                 for i in range(0, len(self.list_of_used_ch)):
                     if self.list_of_used_ch[i].async_ch:
-                        print('async')
                         channel_data, timestamp = current_package.read_data_as_async(self.list_of_used_ch[i].data_type,
                                                                                      self.list_of_used_ch[
                                                                                          i].data_type_size)
-                        print("hihi", channel_data)
                         if len(channel_data) > 0:
                             self.list_of_used_ch[i].channel_data = (self.list_of_used_ch[
                                                                         i].channel_data + channel_data)[
@@ -159,9 +133,7 @@ class MyThread(threading.Thread):
                             self.list_of_used_ch[i].timestamp = (self.list_of_used_ch[i].timestamp + timestamp)[
                                                                 -MAX_ASYNC_SAMPLES:]
                     elif self.list_of_used_ch[i].single_value:
-                        self.list_of_used_ch[i].channel_data = current_package.read_data_as_single_value(
-                            self.list_of_used_ch[i].data_type, self.list_of_used_ch[i].data_type_size)
-                        print("hihi")
+                        self.list_of_used_ch[i].channel_data = current_package.read_data_as_single_value(self.list_of_used_ch[i].data_type, self.list_of_used_ch[i].data_type_size)
                     else:
                         channel_data = current_package.read_data_as_sync(self.list_of_used_ch[i].data_type,
                                                                          self.list_of_used_ch[i].data_type_size,
@@ -195,13 +167,13 @@ class MyThread(threading.Thread):
                             self.state[1] = self.leftWing
                             # print(self.state[1])
 
-                        # if i == 2:
-                        #     self.drone_position[0] = np.mean(channel_data)
-                        #     # print(self.drone_angle[0])
-                        #
-                        # if i == 3:
-                        #     self.drone_position[1] = np.mean(channel_data)
-                        #     # print(self.drone_angle[0])
+                        if i == 2:
+                            self.human_action[0] = np.mean(channel_data)
+                            # print(self.human_action[0])
+                        
+                        if i == 3:
+                            self.human_action[1] = np.mean(channel_data)
+                            # print(self.human_action[1])
 
 
         s.close()
