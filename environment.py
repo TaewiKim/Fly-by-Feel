@@ -83,7 +83,7 @@ class Environment:
             action_front = 0
 
 
-        action_str = "T" + str(int(action_tail)) + "%" + "D" + str(int(action_front)) + "%"
+        action_str = "T" + str(int(action_front)) + "%" + "D" + str(int(action_tail)) + "%"
 
         self.step_count += 1
 
