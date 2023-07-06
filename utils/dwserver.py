@@ -87,7 +87,7 @@ class MyThread(threading.Thread):
         self.drone_position = [0, 0]
         self.rightWing = collections.deque(maxlen=256)
         self.leftWing = collections.deque(maxlen=256)
-        self.human_action = [0, 0]
+        self.human_action = np.array([0, 0], dtype='float64')
 
 
     def run(self):
@@ -168,11 +168,13 @@ class MyThread(threading.Thread):
                             # print(self.state[1])
 
                         if i == 2:
-                            self.human_action[0] = np.mean(channel_data)
+                            thrust = np.mean(channel_data)
+                            self.human_action[0] = thrust
                             # print(self.human_action[0])
                         
                         if i == 3:
-                            self.human_action[1] = np.mean(channel_data)
+                            direction = np.mean(channel_data)
+                            self.human_action[1] = direction
                             # print(self.human_action[1])
 
 

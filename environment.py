@@ -82,7 +82,6 @@ class Environment:
         if action_front < 55:
             action_front = 0
 
-
         action_str = "T" + str(int(action_front)) + "%" + "D" + str(int(action_tail)) + "%"
 
         self.step_count += 1
@@ -97,30 +96,27 @@ class Environment:
         done = False
         Drone_position = self.streamingClient.pos
         # Drone_rotation = self.streamingClient.rot
+        print(Drone_position)
 
         mu = self.target_position
         cov = [[500000, 0, 0], [0, 500000, 0], [0, 0, 100000000]]
         rv = multivariate_normal(mu, cov)
         reward = rv.pdf([Drone_position[0], Drone_position[1], Drone_position[2]])*10**7/2
 
-        # if abs(Drone_position[0]) > 2000:
-        #     reward = -0.1
-        #     done = True
-        #
-        # if abs(Drone_position[1]) > 3000:
-        #     reward = -0.1
-        #     done = True
-        #
-        # if abs(Drone_position[1]) < 100:
-        #     reward = -0.1
-        #     done = True
-        #
-        # if Drone_position[2] < -5000:
-        #     reward = -0.1
-        #     done = True
-        #
-        # if Drone_position[2] > 5000:
-        #     done = True
+        if abs(Drone_position[0]) > 2000:
+            reward = -0.1
+            done = True
+
+        if abs(Drone_position[1]) > 3000:
+            reward = -0.1
+            done = True
+
+        if Drone_position[2] < -3000:
+            reward = -0.1
+            done = True
+
+        if Drone_position[2] > 5000:
+            done = True
 
         if self.step_count >= self.config["max_episode_len"]:
             done = True

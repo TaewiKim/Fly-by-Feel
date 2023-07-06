@@ -15,8 +15,10 @@ class PolicyNet(nn.Module):
         self.pool2 = nn.MaxPool1d(2)
 
         self.fc1 = nn.Linear(61 * 32, 256)
+
         self.fc_mu = nn.Linear(256, 2)
-        self.fc_std  = nn.Linear(256, 2)
+        self.fc_std = nn.Linear(256, 2)
+
         self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
 
         self.log_alpha = torch.tensor(np.log(init_alpha))
@@ -37,13 +39,10 @@ class PolicyNet(nn.Module):
         std = F.softplus(self.fc_std(x))
         dist = Normal(mu, std)
         action = dist.rsample()
-
         log_prob = dist.log_prob(action)
         real_action = torch.tanh(action)
         real_log_prob = log_prob - torch.log(1-torch.tanh(action).pow(2) + 1e-7)
 
-        # print("a", real_action)
-        # print("log prob", real_log_prob)
         return real_action, real_log_prob
 
     def train_net(self, q1, q2, mini_batch):
@@ -51,7 +50,7 @@ class PolicyNet(nn.Module):
         a, log_prob = self.forward(s)
         entropy = -self.log_alpha.exp() * log_prob
 
-        q1_val, q2_val = q1(s,a), q2(s,a)
+        q1_val, q2_val = q1(s, a), q2(s, a)
         q1_q2 = torch.cat([q1_val, q2_val], dim=1)
         min_q = torch.min(q1_q2, 1, keepdim=True)[0]
 
@@ -59,12 +58,13 @@ class PolicyNet(nn.Module):
         self.optimizer.zero_grad()
         loss.mean().backward()
         self.optimizer.step()
-        self.optimization_step +=1
+        self.optimization_step += 1
 
         self.log_alpha_optimizer.zero_grad()
         alpha_loss = -(self.log_alpha.exp() * (log_prob + self.target_entropy).detach()).mean()
         alpha_loss.backward()
         self.log_alpha_optimizer.step()
+
         return entropy
 
 class QNet(nn.Module):
@@ -75,32 +75,31 @@ class QNet(nn.Module):
         self.pool1 = nn.MaxPool1d(2)
         self.conv2 = nn.Conv1d(32, 32, 5)
         self.pool2 = nn.MaxPool1d(2)
-
         self.fc1 = nn.Linear(61 * 32, 128)
         self.fc_a = nn.Linear(2, 64)
-        self.fc_a2 = nn.Linear(64, 64)
-        self.fc_cat1 = nn.Linear(128+64, 128)
-        self.fc_cat2 = nn.Linear(128, 32)
-        self.fc_out = nn.Linear(32, 1)
+        self.fc_cat = nn.Linear(128 + 64, 32)
+        self.fc_out = nn.Linear(32, 2)
         self.optimizer = optim.Adam(self.parameters(), lr=learning_rate)
 
     def forward(self, x, a):
         x = self.pool1(F.relu(self.conv1(x)))
         x = self.pool2(F.relu(self.conv2(x)))
-
         x = x.reshape(-1, 61 * 32)
         h1 = F.relu(self.fc1(x))
         h2 = F.relu(self.fc_a(a))
-        h2 = F.relu(self.fc_a2(h2))
-        cat = torch.cat([h1,h2], dim=1)
-        q = F.relu(self.fc_cat1(cat))
-        q = F.relu(self.fc_cat2(q))
+        cat = torch.cat([h1, h2], dim=1)
+        # print('cat_dim1:', cat.shape)
+        q = F.relu(self.fc_cat(cat))
         q = self.fc_out(q)
+
         return q
 
     def train_net(self, target, mini_batch):
         s, a, r, s_prime, done = mini_batch
-        loss = F.smooth_l1_loss(self.forward(s, a) , target).mean()
+        # print('train_net:', a.shape)
+        # print(self.forward(s, a).shape)
+
+        loss = F.smooth_l1_loss(self.forward(s, a), target).mean()
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -112,15 +111,15 @@ class QNet(nn.Module):
 
 def calc_target(pi, q1, q2, mini_batch, gamma):
     s, a, r, s_prime, done = mini_batch
+    # print(type(s), type(a), type(r), type(s_prime), type(done))
+    # print('calc_target', a.shape)
 
     with torch.no_grad():
-        a_prime, log_prob= pi(s_prime)
+        a_prime, log_prob = pi(s_prime)
         entropy = -pi.log_alpha.exp() * log_prob
-        entropy = entropy.mean(1, keepdim=True)
-        q1_val, q2_val = q1(s_prime,a_prime), q2(s_prime,a_prime)
-
+        q1_val, q2_val = q1(s_prime, a_prime), q2(s_prime, a_prime)
         q1_q2 = torch.cat([q1_val, q2_val], dim=1)
         min_q = torch.min(q1_q2, 1, keepdim=True)[0]
         target = r + gamma * done * (min_q + entropy)
 
-    return target.float()
+    return target

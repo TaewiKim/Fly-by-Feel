@@ -110,37 +110,14 @@ def main(config):
         while not done:
             t1 = time.time()
             s, r, done, drone_position = env.get_current_state()
-            a, _ = pi(torch.from_numpy(s).float().unsqueeze(0))
-            a_np = a.detach().numpy()
-            a_np = a_np[0]
 
-            if config["human_train"]:
-                a = env.human_action
-                a_np = np.array(a, dtype='float32')
+            a = env.human_action
+            a_np = np.array(a)
 
             env.step(a_np)
 
-            action_sum = [sum(x) for x in zip(action_sum, a_np)]
-
-            done_mask = 0.0 if done else 1.0
-            if prev_s is not None:
-                memory.put((prev_s, a_np, r, s, done_mask))
-            prev_s, prev_a = s, a_np
-            prev_drone_position = drone_position
-
-            step += 1
-            score += r
-
-            if done:
-                print("n_episode :{}, score : {:.1f}, n_buffer : {}".format(n_epi, score, memory.size()))
-                break
-
             t2 = time.time()-t1
             loop_t += t2
-
-            if config["print_mode"]:
-                data_log.append([i, step, time.time()-init_t, drone_position, a_np, r, s])
-
 
             if t2 < config["decision_period"]:
                 time.sleep(config["decision_period"]-t2)
@@ -148,43 +125,8 @@ def main(config):
         train_t = 0.0
         env.stop_drone()
 
-        if memory.size() > config["train_start_buffer_size"]:
-            train_t_lst, loss_lst = [], []
-            for i in range(20):
-                t1 = time.time()
-                mini_batch = memory.sample(config["batch_size"])
-                td_target = calc_target(pi, q1_target, q2_target, mini_batch, config["gamma"])
-                loss1 = q1.train_net(td_target, mini_batch)
-                loss2 = q2.train_net(td_target, mini_batch)
-                entropy = pi.train_net(q1, q2, mini_batch)
-                q1.soft_update(q1_target)
-                q2.soft_update(q2_target)
-
-                train_t_lst.append(time.time()-t1)
-                loss_lst.append(loss1)
-
-            write_summary(writer, config, n_epi, score, pi.optimization_step, np.mean(loss_lst), 0.0, env, loop_t/float(step), np.mean(train_t_lst), pi.log_alpha.exp().item(), action_sum, entropy.mean().item())
-
-
-        if n_epi % config["model_save_interval"] == 0:
-            save_model(config, q1, q2, pi, n_epi)
-
-        if n_epi % 30 == 0 and n_epi != 0:
-            env.stop_drone()
-            time.sleep(60)
-
-        if config["print_mode"]:
-            df = pd.DataFrame(data_log)
-            df.to_csv(path+'/'+ datetime.now().strftime("[%m-%d]%H.%M.%S")+"_epi_{}".format(n_epi)+'.csv')
-
-        if config["Fan_rand"]:
-            Fan_power = random.randint(200, 250)
-            Fan_str = "F" + str(Fan_power) + "%"
-            env.serial_channel.serialConnection.write(Fan_str.encode())
-
         env.stop_drone()
-        user_input = input("Press any key to continue")
-
+        time.sleep(15)
         score = 0.0
         n_epi += 1
         action_sum = [0, 0]
@@ -202,17 +144,17 @@ if __name__ == "__main__":
         "gamma" : 0.98,
         "lr_pi" : 0.0001, #0.0005
         "lr_q": 0.0001, #0.0001
-        "init_alpha"  : 0.002, #0.0001
+        "init_alpha"  : 0.002, #0.0001.
         "print_interval" : 1,
         "target_update_interval": 3,
         "tau" : 0.001,
         "target_entropy" : -1.0,
         "lr_alpha" : 0.0001, #0.0001
         "batch_size" : 64, #32
-        "train_start_buffer_size" : 10,  #5000
+        "train_start_buffer_size" : 1000,  #5000
         "decision_period" : 0.05,
         "model_save_interval" : 10,
-        "max_episode_len" : 100, # 0.05*100 = 5 sec
+        "max_episode_len" : 30000, # 0.05*400 = 15 sec
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
         "target_position": [0, 1500, 5000],
         "print_mode": False,
