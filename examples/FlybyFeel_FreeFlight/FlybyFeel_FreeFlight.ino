@@ -92,8 +92,8 @@ void getSerialData()
           {
             digitalWrite(20, LOW);
             digitalWrite(21, HIGH);
-            if (tmp.toInt() > 150)
-              motorCmd_tail = 150;
+            if (tmp.toInt() > 120)
+              motorCmd_tail = 120;
             else
               motorCmd_tail = tmp.toInt();
           }
@@ -101,8 +101,8 @@ void getSerialData()
           {
             digitalWrite(21, LOW);
             digitalWrite(20, HIGH);
-            if (tmp.toInt() < -150)
-              motorCmd_tail = 150;
+            if (tmp.toInt() < -120)
+              motorCmd_tail = -120;
             else
               motorCmd_tail = -tmp.toInt();
           }

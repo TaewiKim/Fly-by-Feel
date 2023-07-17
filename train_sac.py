@@ -113,10 +113,12 @@ def main(config):
             a, _ = pi(torch.from_numpy(s).float().unsqueeze(0))
             a_np = a.detach().numpy()
             a_np = a_np[0]
+            print(a_np)
 
             if config["human_train"]:
                 a = env.human_action
                 a_np = np.array(a, dtype='float32')
+                print(a_np)
 
             env.step(a_np)
 
@@ -171,7 +173,6 @@ def main(config):
 
         if n_epi % 30 == 0 and n_epi != 0:
             env.stop_drone()
-            time.sleep(60)
 
         if config["print_mode"]:
             df = pd.DataFrame(data_log)
@@ -198,7 +199,7 @@ def main(config):
 
 if __name__ == "__main__":
     config = {
-        "buffer_limit" : 30000,  #10000
+        "buffer_limit" : 10000,  #10000
         "gamma" : 0.98,
         "lr_pi" : 0.0001, #0.0005
         "lr_q": 0.0001, #0.0001
@@ -209,17 +210,17 @@ if __name__ == "__main__":
         "target_entropy" : -1.0,
         "lr_alpha" : 0.0001, #0.0001
         "batch_size" : 64, #32
-        "train_start_buffer_size" : 10,  #5000
+        "train_start_buffer_size" : 100,  #5000
         "decision_period" : 0.05,
         "model_save_interval" : 10,
-        "max_episode_len" : 100, # 0.05*100 = 5 sec
+        "max_episode_len" : 60, # 0.05*60 = 3 sec
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
         "target_position": [0, 1500, 5000],
         "print_mode": False,
         "Fan_power": 0,
         "Fan_rand": False,
-        "human_train": True,
-        "trained_model_path": None,
-        # "trained_model_path" : "logs/[08-24]17.25.21/sac_model_5360.tar"
+        "human_train": False,
+        # "trained_model_path": None,
+        "trained_model_path": "logs/[07-14]14.29.49/sac_model_800.tar"
     }
     main(config)

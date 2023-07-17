@@ -76,7 +76,7 @@ class Environment:
         a_thrust = actions[0]   # a_thrust : -1 ~ 1
         a_direction = actions[1]
 
-        action_tail = (a_direction) * 150 # action : real number between -150~150, motor power
+        action_tail = (a_direction) * 120 # action : real number between -150~150, motor power
 
         action_front = ((a_thrust + 1) / 2.0) * 200 + 50 # action : real number between 0 ~ 250, motor power
         if action_front < 55:
@@ -94,29 +94,26 @@ class Environment:
 
     def calc_reward_done(self):
         done = False
-        Drone_position = self.streamingClient.pos
+        Drone_position = np.array(self.streamingClient.pos)*1000
         # Drone_rotation = self.streamingClient.rot
-        print(Drone_position)
+        # print(Drone_position)
 
         mu = self.target_position
         cov = [[500000, 0, 0], [0, 500000, 0], [0, 0, 100000000]]
         rv = multivariate_normal(mu, cov)
-        reward = rv.pdf([Drone_position[0], Drone_position[1], Drone_position[2]])*10**7/2
+        reward = rv.pdf([Drone_position[0], Drone_position[1], Drone_position[2]])*10**10*3
 
-        if abs(Drone_position[0]) > 2000:
-            reward = -0.1
-            done = True
+        if Drone_position[2] < -2500:
+            reward = 0
 
-        if abs(Drone_position[1]) > 3000:
-            reward = -0.1
+        if Drone_position[2] > 4800:
             done = True
+            print('Z > 4800')
 
-        if Drone_position[2] < -3000:
-            reward = -0.1
+        if abs(Drone_position[0]) > 1800:
             done = True
+            print('X > 2000')
 
-        if Drone_position[2] > 5000:
-            done = True
 
         if self.step_count >= self.config["max_episode_len"]:
             done = True
