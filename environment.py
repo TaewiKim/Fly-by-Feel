@@ -1,5 +1,5 @@
 import random
-
+import time, os
 import numpy as np
 from utils.serialChannel import serialPlot
 import copy
@@ -124,7 +124,37 @@ class Environment:
     def stop_drone(self):
         action_str = "T" + str(0) + "%" + "D" + str(0) + "%"
         self.serial_channel.serialConnection.write(action_str.encode())
+    def drone_shoot(self):
+        loop_t = 0.0
+        shooter_power = 0
+        shooter_time = 34
+        for i in range(shooter_time):
+            t1 = time.time()
+            shooter_power += 250/20
+            shooter_str = "S" + str(shooter_power) + "%"
+            self.serial_channel.serialConnection.write(shooter_str.encode())
+            t2 = time.time() - t1
+            loop_t += t2
+            if t2 < 0.05:
+                time.sleep(0.05-t2)
+        shooter_str = "S" + str(0) + "%"
+        self.serial_channel.serialConnection.write(shooter_str.encode())
 
+    def shooter_back(self):
+        loop_t = 0.0
+        shooter_power = 0
+        shooter_time = 60
+        for i in range(shooter_time):
+            t1 = time.time()
+            shooter_power = -25
+            shooter_str = "S" + str(shooter_power) + "%"
+            self.serial_channel.serialConnection.write(shooter_str.encode())
+            t2 = time.time() - t1
+            loop_t += t2
+            if t2 < 0.05:
+                time.sleep(0.05 - t2)
+        shooter_str = "S" + str(0) + "%"
+        self.serial_channel.serialConnection.write(shooter_str.encode())
 
     @classmethod
     def close(cls):

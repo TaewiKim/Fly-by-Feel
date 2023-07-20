@@ -21,7 +21,7 @@ def main(config):
     np.set_printoptions(precision=3)
     save_config(config)
 
-    s_channel = serialPlot('COM6', 19200, 4)  # dataNumBytes 4  : number of bytes of 1 data point
+    s_channel = serialPlot('COM27', 19200, 4)  # dataNumBytes 4  : number of bytes of 1 data point
     s_channel.readSerialStart()  # starts background thread
 
     my_thread, tn, ready = get_dewe_thread()
@@ -97,7 +97,7 @@ def main(config):
     n_epi = 0
     action_sum = [0, 0]
 
-    for i in range(500):
+    for i in range(config["max_episode_iter"]):
         env.reset()
         done = False
         step = 0
@@ -106,6 +106,7 @@ def main(config):
         prev_s, prev_a = None, None
         prev_drone_position = [0, 0, 0]
         init_t = time.time()
+        env.drone_shoot()
 
         while not done:
             t1 = time.time()
@@ -113,13 +114,12 @@ def main(config):
             a, _ = pi(torch.from_numpy(s).float().unsqueeze(0))
             a_np = a.detach().numpy()
             a_np = a_np[0]
-            print(a_np)
 
             if config["human_train"]:
                 a = env.human_action
                 a_np = np.array(a, dtype='float32')
-                print(a_np)
 
+            print(a_np)
             env.step(a_np)
 
             action_sum = [sum(x) for x in zip(action_sum, a_np)]
@@ -141,7 +141,7 @@ def main(config):
             loop_t += t2
 
             if config["print_mode"]:
-                data_log.append([i, step, time.time()-init_t, drone_position, a_np, r, s])
+                data_log.append([i, step, time.time()-init_t, drone_position, a_np, r, s[0], s[1]])
 
 
             if t2 < config["decision_period"]:
@@ -184,6 +184,7 @@ def main(config):
             env.serial_channel.serialConnection.write(Fan_str.encode())
 
         env.stop_drone()
+        env.shooter_back()
         user_input = input("Press any key to continue")
 
         score = 0.0
@@ -201,7 +202,7 @@ if __name__ == "__main__":
     config = {
         "buffer_limit" : 10000,  #10000
         "gamma" : 0.98,
-        "lr_pi" : 0.0001, #0.0005
+        "lr_pi" : 0.0005, #0.0005
         "lr_q": 0.0001, #0.0001
         "init_alpha"  : 0.002, #0.0001
         "print_interval" : 1,
@@ -214,13 +215,14 @@ if __name__ == "__main__":
         "decision_period" : 0.05,
         "model_save_interval" : 10,
         "max_episode_len" : 60, # 0.05*60 = 3 sec
+        "max_episode_iter": 500,
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
         "target_position": [0, 1500, 5000],
         "print_mode": False,
         "Fan_power": 0,
         "Fan_rand": False,
-        "human_train": False,
-        # "trained_model_path": None,
-        "trained_model_path": "logs/[07-14]14.29.49/sac_model_800.tar"
+        "human_train": True,
+        "trained_model_path": None,
+        # "trained_model_path": "logs/[07-17]17.19.55/sac_model_600.tar"
     }
     main(config)

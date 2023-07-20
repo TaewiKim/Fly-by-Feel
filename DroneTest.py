@@ -21,7 +21,7 @@ def main(config):
     np.set_printoptions(precision=3)
     save_config(config)
 
-    s_channel = serialPlot('COM6', 19200, 4)  # dataNumBytes 4  : number of bytes of 1 data point
+    s_channel = serialPlot('COM27', 19200, 4)  # dataNumBytes 4  : number of bytes of 1 data point
     s_channel.readSerialStart()  # starts background thread
 
     my_thread, tn, ready = get_dewe_thread()
