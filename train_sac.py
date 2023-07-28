@@ -114,12 +114,12 @@ def main(config):
             a, _ = pi(torch.from_numpy(s).float().unsqueeze(0))
             a_np = a.detach().numpy()
             a_np = a_np[0]
+            print(a_np)
 
             if config["human_train"]:
                 a = env.human_action
                 a_np = np.array(a, dtype='float32')
 
-            print(a_np)
             env.step(a_np)
 
             action_sum = [sum(x) for x in zip(action_sum, a_np)]
@@ -204,25 +204,26 @@ if __name__ == "__main__":
         "gamma" : 0.98,
         "lr_pi" : 0.0005, #0.0005
         "lr_q": 0.0001, #0.0001
-        "init_alpha"  : 0.002, #0.0001
+        "init_alpha"  : 0.0005, #0.0001
         "print_interval" : 1,
         "target_update_interval": 3,
         "tau" : 0.001,
         "target_entropy" : -1.0,
         "lr_alpha" : 0.0001, #0.0001
         "batch_size" : 64, #32
-        "train_start_buffer_size" : 100,  #5000
+        "train_start_buffer_size" : 60,  #5000
         "decision_period" : 0.05,
         "model_save_interval" : 10,
         "max_episode_len" : 60, # 0.05*60 = 3 sec
         "max_episode_iter": 500,
         "log_dir" : "logs/" + datetime.now().strftime("[%m-%d]%H.%M.%S"),
-        "target_position": [0, 1500, 5000],
-        "print_mode": False,
+        "target_position": [0, 500, 5000],
+        "print_mode": True,
         "Fan_power": 0,
         "Fan_rand": False,
-        "human_train": True,
-        "trained_model_path": None,
-        # "trained_model_path": "logs/[07-17]17.19.55/sac_model_600.tar"
+        "human_train": False,
+        "trained_model_path": "logs/[07-27]14.56.30/sac_model_2600.tar"
+
     }
+
     main(config)

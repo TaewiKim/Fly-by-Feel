@@ -103,16 +103,20 @@ class Environment:
         rv = multivariate_normal(mu, cov)
         reward = rv.pdf([Drone_position[0], Drone_position[1], Drone_position[2]])*10**10*3
 
-        if Drone_position[2] < -2500:
+        if abs(Drone_position[1]) < 100:
             reward = 0
+            print('Y < 100')
 
-        if Drone_position[2] > 4800:
-            done = True
-            print('Z > 4800')
-
-        if abs(Drone_position[0]) > 1800:
-            done = True
-            print('X > 2000')
+        # if Drone_position[2] < -2500:
+        #     reward = 0
+        #
+        # if Drone_position[2] > 4800:
+        #     done = True
+        #     print('Z > 4800')
+        #
+        # if abs(Drone_position[0]) > 1800:
+        #     done = True
+        #     print('X > 2000')
 
 
         if self.step_count >= self.config["max_episode_len"]:
@@ -127,7 +131,7 @@ class Environment:
     def drone_shoot(self):
         loop_t = 0.0
         shooter_power = 0
-        shooter_time = 34
+        shooter_time = 28
         for i in range(shooter_time):
             t1 = time.time()
             shooter_power += 250/20
