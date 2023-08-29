@@ -39,7 +39,7 @@ void loop() {
   analogWrite(motorPin_shooter, motorCmd_shooter);
 
   i = i+1;
-  if (i > 1000000)
+  if (i > 5000000)
   {  
     motorCmd_front = 0;
     motorCmd_tail = 0;

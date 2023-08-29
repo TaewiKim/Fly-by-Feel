@@ -20,7 +20,7 @@ class Environment:
         self.Px_sum = 0
         self.Py_sum = 0
         self.Pz_sum = 0
-        self.Drone_position = 0
+        self.Drone_position = np.array([0, 0, -2100])
         self.human_action = 0
 
         self.n_state = 256
@@ -95,13 +95,30 @@ class Environment:
     def calc_reward_done(self):
         done = False
         Drone_position = np.array(self.streamingClient.pos)*1000
+
         # Drone_rotation = self.streamingClient.rot
         # print(Drone_position)
 
-        mu = self.target_position
-        cov = [[1000000, 0, 0], [0, 800000, 0], [0, 0, 1000000]]
-        rv = multivariate_normal(mu, cov)
-        reward = rv.pdf([Drone_position[0], Drone_position[1], Drone_position[2]])*10**10*2
+        # mu = self.target_position
+        # cov = [[1000000, 0, 0], [0, 800000, 0], [0, 0, 1000000]]
+        # rv = multivariate_normal(mu, cov)
+        # reward = rv.pdf([Drone_position[0], Drone_position[1], Drone_position[2]])*10**10*2
+
+        print(Drone_position)
+
+        if Drone_position[2] >= 2000:
+            reward = -(Drone_position[0] - self.Drone_position[0])*0.01
+
+        else:
+            if abs(Drone_position[0]) >= 700:
+                done = True
+
+            reward = (Drone_position[2] - self.Drone_position[2])*0.005 - abs(Drone_position[0] - self.Drone_position[0])*0.01
+
+        # reward = (Drone_position[0] - self.Drone_position[0])*0.005 + (Drone_position[1] - self.Drone_position[1])*0.01
+
+        print(reward)
+        self.Drone_position = Drone_position
 
         # if abs(Drone_position[1]) < 100:
         #     reward = 0
@@ -128,6 +145,7 @@ class Environment:
     def stop_drone(self):
         action_str = "T" + str(0) + "%" + "D" + str(0) + "%"
         self.serial_channel.serialConnection.write(action_str.encode())
+
     def drone_shoot(self):
         loop_t = 0.0
         shooter_power = 0
