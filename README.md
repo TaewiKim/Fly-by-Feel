@@ -3,7 +3,7 @@
 
 
 Implementations of RL algorithms used in the work of Fly-by-Feel. 
-To run this code, you need an robot hardware 
+Note; you need a drone platform to run this code
 
 ## Usage
 ```bash
