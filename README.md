@@ -2,7 +2,8 @@
 # Fly-by-Feel
 
 
-Implementations of RL algorithms used in the work of Fly-by-Feel
+Implementations of RL algorithms used in the work of Fly-by-Feel. 
+To run this code, you need an robot hardware 
 
 ## Usage
 ```bash
@@ -26,6 +27,9 @@ python train_dqn.py
 
 
 ## Dependencies
-1. PyTorch
-2. OpenAI GYM 
+1. torch	2.0.1	
+2. matplotlib	3.7.1
+3. numpy	1.23.2
+4. pandas	2.0.3
+   
 
