@@ -1,9 +1,7 @@
 
 # Fly-by-Feel
-
-
 Implementations of RL algorithms used in the work of Fly-by-Feel. 
-Note; you need a drone platform to run this code
+Note; DEWESoft SIRIUS system is required for data acquisition.
 
 ## Usage
 ```bash
