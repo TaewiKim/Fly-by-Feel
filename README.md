@@ -21,7 +21,7 @@ python train_sac.py
 ```
 
 ## Description of Codes
-- `environment.py` -> Initial setup Hardward environment 
+- `environment.py` -> real-world RL environment 
 - `replayBuffer.py` -> replay buffer implementation
 - `train_sac.py` -> entry point for training 
 - `models`
