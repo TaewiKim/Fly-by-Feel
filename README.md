@@ -9,7 +9,7 @@ As the code requires a hardware setup to function properly, there may be technic
 
 The shared code below is provided to help you understand how the data is utilized in an actual hardware setup. We kindly ask for your understanding as you review the shared materials with this context in mind.
 
-## Hardware
+## Hardware dependencies
 1. DEWE Soft Sirius (https://dewesoft.com/blog/sirius-uni-universal-amplifier)
 2. Opti track PrimeX 13 (https://optitrack.com/cameras/primex-13/)
 3. Opti track motion capture markers (https://optitrack.com/accessories/markers/)
@@ -34,7 +34,7 @@ python train_sac.py
   - `util` -> code for saving trained model and logs
 
 
-## Dependencies
+## Python dependencies
 1. torch	2.0.1	
 2. matplotlib	3.7.1
 3. numpy	1.23.2
