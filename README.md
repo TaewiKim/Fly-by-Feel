@@ -9,7 +9,7 @@ The shared code below is provided to help you understand how the data is utilize
 ## Hardware
 1. DEWE Soft Sirius (https://dewesoft.com/blog/sirius-uni-universal-amplifier)
 2. Opti track PrimeX 13 (https://optitrack.com/cameras/primex-13/)
-3. Opti track motion capture markers 6.4mm M3 Markers (https://optitrack.com/accessories/markers/)
+3. Opti track motion capture markers (https://optitrack.com/accessories/markers/)
 
 ## Usage
 ```bash
