@@ -1,9 +1,8 @@
 
 # Fly-by-Feel
-```
-Important Note;
+## Important Note;
 The reinforcement learning experiments conducted in this study were performed using real-time data collected from flights in a real-world hardware environment, without relying on simulations. As the code requires a hardware setup to function properly, we would like to note that there are limitations to directly reproducing the results. The shared code below is provided to help you understand how the data is utilized in an actual hardware setup. We kindly ask for your understanding as you review the shared materials with this context in mind.
-```
+
 
 ## Usage
 ```bash
@@ -14,10 +13,8 @@ python train_sac.py
 ## Description of Codes
 - `environment.py` 
 - `replayBuffer.py` -> replay buffer implementation
-- `train_dqn.py` -> entry point for training 
 - `train_sac.py` -> entry point for training 
 - `models`
-  - `dqn_model.py`  -> neural network implementations used for DQN algorithm
   - `sac_model.py`  -> neural network implementations used for SAC algorithm
 - `utils`
   - `dwclient.py`  -> client code for communication between the drone and the algorithm server
