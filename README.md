@@ -29,8 +29,8 @@ python train_sac.py
 - `utils`
   - `dwclient.py`  -> client code for communication between the drone and the algorithm server
   - `dwserver.py`  -> server code for communication between the drone and the algorithm server
-  - `NatNetClient.py` -> Code for Opti track motion capture data streaming
-  - `serialChannel.py` -> Code for Teensyduino serial communication
+  - `NatNetClient.py` -> code for Opti track motion capture data streaming
+  - `serialChannel.py` -> code for Teensyduino serial communication
   - `util` -> code for saving trained model and logs
 
 
