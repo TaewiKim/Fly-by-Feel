@@ -1,6 +1,6 @@
 
 # Fly-by-Feel
-## Important Note;
+## Important Note
 The reinforcement learning experiments conducted in this study were performed using real-time data collected from flights in a real-world hardware environment, without relying on simulations.
 As the code requires a hardware setup to function properly, there may be technical barriers to entry associated with hardware implementation.
 
